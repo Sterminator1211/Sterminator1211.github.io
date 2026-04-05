@@ -1,1 +1,48 @@
-tr
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNO No Mercy • Multiplayer</title>
+    <style>
+        body { background: linear-gradient(135deg, #1a0033, #000); color: #fff; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; padding: 40px 20px; min-height: 100vh; }
+        h1 { font-size: 4rem; color: #ffcc00; text-shadow: 0 0 30px #ff8800; }
+        input { width: 80%; max-width: 600px; padding: 15px; font-size: 1.2rem; margin: 20px; border-radius: 12px; border: none; }
+        button { background: #ffcc00; color: #000; font-size: 1.5rem; padding: 18px 50px; margin: 15px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        button:hover { transform: scale(1.05); }
+        .instructions { max-width: 700px; margin: 40px auto; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>UNO NO MERCY</h1>
+    <p style="font-size:1.5rem;">Real multiplayer — your laptop is the server</p>
+
+    <input type="text" id="tunnelUrl" placeholder="https://xxxx.ngrok-free.app" value="">
+    <br>
+    <button onclick="launchGame()">▶ PLAY GAME</button>
+    <button onclick="launchAdmin()">🔧 OPEN ADMIN PANEL</button>
+
+    <div class="instructions">
+        <h2>How to play with friends (anywhere in the world):</h2>
+        <ol>
+            <li>On your Linux laptop: <code>node server.js</code></li>
+            <li>In another terminal: <code>ngrok http 3000</code></li>
+            <li>Copy the <strong>https://xxxx.ngrok-free.app</strong> URL</li>
+            <li>Paste it above → click PLAY GAME</li>
+            <li>Share this GitHub link with friends: they just paste the same URL</li>
+        </ol>
+        <p><strong>Your public site:</strong> https://yourusername.github.io</p>
+    </div>
+
+    <script>
+        function launchGame() {
+            const url = document.getElementById('tunnelUrl').value.trim() || prompt("Enter ngrok URL:");
+            if (url) window.location.href = `game.html?server=${encodeURIComponent(url)}`;
+        }
+        function launchAdmin() {
+            const url = document.getElementById('tunnelUrl').value.trim() || prompt("Enter ngrok URL:");
+            if (url) window.location.href = `admin.html?server=${encodeURIComponent(url)}`;
+        }
+    </script>
+</body>
+</html>
