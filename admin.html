@@ -20,7 +20,7 @@
 </head>
 <body>
     <h1>UNO ADMIN PANEL - LIVE</h1>
-    <div id="status" class="status">Connecting to ngrok...</div>
+    <div id="status" class="status">Connecting to tunnel...</div>
     <div id="playersList"></div>
     <div id="controls">
         <button id="kickBtn">FORCE KICK</button>
@@ -32,27 +32,36 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
+        // === DYNAMIC TUNNEL CONNECTION (works with Cloudflare or ngrok) ===
         const params = new URLSearchParams(window.location.search);
         let serverUrl = params.get('server');
-        if (!serverUrl) serverUrl = prompt("Enter your ngrok URL[](https://xxxx.ngrok-free.app):");
-
-        if (!serverUrl || !serverUrl.startsWith('https://')) {
-            document.body.innerHTML = `<h1 style="color:red">❌ Invalid ngrok URL</h1>`;
+        if (!serverUrl) {
+            serverUrl = prompt("Enter your Tunnel URL (Cloudflare https://xxxx.trycloudflare.com or ngrok https://xxxx.ngrok-free.app):");
         }
 
+        if (!serverUrl || !serverUrl.startsWith('https://')) {
+            document.body.innerHTML = `<h1 style="color:red;text-align:center;margin-top:100px">❌ Invalid Tunnel URL</h1><p style="text-align:center">Go back and paste the exact https:// URL from your laptop terminal.</p>`;
+        }
+
+        console.log("🔗 Admin connecting to:", serverUrl + '/admin');
+
         const socket = io(serverUrl + '/admin', {
-            transports: ['websocket'],
-            reconnection: true
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 15,
+            timeout: 20000
         });
 
         socket.on('connect', () => {
-            document.getElementById('status').innerHTML = '✅ Connected to ngrok — live view';
+            console.log('✅ ADMIN CONNECTED SUCCESSFULLY!');
+            document.getElementById('status').innerHTML = '✅ Connected to your laptop — live game view';
             document.getElementById('status').style.color = '#0f0';
         });
 
         socket.on('connect_error', (err) => {
-            console.error('Admin connection error:', err.message);
-            document.getElementById('status').innerHTML = '❌ Connection failed — check console';
+            console.error('❌ Admin connection error:', err.message);
+            document.getElementById('status').innerHTML = '❌ Connection failed — check console (F12) and make sure tunnel is running';
+            document.getElementById('status').style.color = '#f00';
         });
 
         socket.on('adminState', (state) => {
@@ -77,6 +86,13 @@
             const name = prompt("Enter exact player name to FORCE KICK:");
             if (name) socket.emit('forceKick', name.trim());
         };
+
+        // Auto-refresh admin view every 3 seconds if connected
+        socket.on('connect', () => {
+            setInterval(() => {
+                if (socket.connected) socket.emit('getAdminState'); // optional ping
+            }, 3000);
+        });
     </script>
 </body>
 </html>
