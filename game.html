@@ -2,43 +2,159 @@
 <html>
 <head>
     <title>UNO No Mercy</title>
-    <!-- (your exact original <style> block here — unchanged) -->
     <style>
-        /* Paste your entire original <style> from public/index.html here */
         body { background: #1a1a1a; color: white; font-family: 'Arial Black', Gadget, sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        /* ... all your card, playerBar, etc. styles exactly as you had ... */
+        #playerBar { height: 18vh; background: #222; border-bottom: 3px solid #444; display: flex; align-items: center; justify-content: center; overflow-x: auto; }
+        .player-card { background: #333; padding: 10px 15px; margin: 0 10px; border-radius: 8px; border: 2px solid #555; min-width: 110px; transition: 0.3s; font-family: sans-serif; }
+        .is-me { background-color: #4169e1 !important; border-color: #fff; }
+        .player-active { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; transform: scale(1.05); }
+        #mainArea { flex: 1; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .card { display: inline-block; width: 90px; height: 135px; border-radius: 10px; margin: 8px; position: relative; border: 4px solid white; box-shadow: 3px 3px 8px rgba(0,0,0,0.6); cursor: pointer; overflow: hidden; transition: transform 0.2s; vertical-align: middle; }
+        .card:hover { transform: translateY(-10px); }
+        .card::before { content: ""; position: absolute; top: 15%; left: -15%; width: 130%; height: 70%; background: white; border-radius: 50%; transform: rotate(-25deg); z-index: 1; }
+        .card::after { content: attr(data-value); position: absolute; top: 5px; left: 5px; font-size: 14px; color: white; z-index: 3; text-shadow: 1px 1px 2px black; }
+        .card-inner { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 2; font-size: 38px; font-style: italic; font-weight: 900; text-shadow: 3px 3px 0px rgba(0,0,0,0.2); }
+        .Red { background-color: #c00; color: #c00; } .Green { background-color: #008000; color: #008000; } .Blue { background-color: #0000ff; color: #0000ff; } .Yellow { background-color: #ffcc00; color: #ffcc00; }
+        .Wild { background: conic-gradient(#c00 0% 25%, #0000ff 25% 50%, #ffcc00 50% 75%, #008000 75% 100%); color: black; }
+        #hand { background: #2a2a2a; padding: 20px; border-top: 6px solid #444; white-space: nowrap; overflow-x: auto; min-height: 180px; }
+        button, select, input { padding: 12px 20px; font-size: 16px; font-weight: bold; margin: 5px; cursor: pointer; border-radius: 8px; border: none; background: #eee; }
+        #drawBtn { background: #ffcc00; color: black; padding: 15px 30px; font-size: 20px; border: 3px solid white; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #winnerName { font-size: 80px; color: #ffcc00; text-shadow: 0 0 20px #ffcc00, 0 0 40px #ff8800; margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
     </style>
 </head>
 <body>
-    <!-- (your original HTML structure: winnerScreen, playerBar, mainArea, hand) -->
-    <div id="winnerScreen" class="overlay"> ... </div>
-    <div id="playerBar"><div id="playerList"></div></div>
-    <div id="mainArea"> ... </div>
+    <div id="winnerScreen" class="overlay">
+        <h1 style="color: white; margin:0;">VICTORY</h1>
+        <h1 id="winnerName"></h1>
+        <button onclick="location.reload()" style="background: #00ff00; transform: scale(1.5);">PLAY AGAIN</button>
+    </div>
+    <div id="playerBar"><div id="playerList">Connecting to server...</div></div>
+    <div id="mainArea">
+        <div id="lobby">
+            <h1>UNO MULTI-MODE</h1>
+            <input type="text" id="name" placeholder="Enter New Nickname">
+            <button onclick="join()">Join Lobby</button>
+            <div>
+                <select id="gameMode">
+                    <option value="No Mercy">No Mercy</option>
+                    <option value="OG">OG</option>
+                </select>
+                <button onclick="start()" style="background: #00ff00;">START</button>
+            </div>
+            <label><input type="checkbox" id="stackLower"> Allow Stacking</label>
+        </div>
+        <div id="game" style="display:none; width: 100%;">
+            <h2 id="status"></h2>
+            <div id="topCard"></div>
+            <div style="margin-top: 20px;"><button id="drawBtn" onclick="draw()">DRAW</button></div>
+        </div>
+    </div>
     <div id="hand"></div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
-        // === DYNAMIC SERVER URL FROM GITHUB PAGES ===
+        // === DYNAMIC NGROK CONNECTION (this is the fix) ===
         const params = new URLSearchParams(window.location.search);
         let serverUrl = params.get('server');
-        if (!serverUrl) {
-            serverUrl = prompt("Enter your ngrok URL[](https://xxxx.ngrok-free.app):");
+        if (!serverUrl) serverUrl = prompt("Enter your ngrok URL[](https://xxxx.ngrok-free.app):");
+
+        if (!serverUrl || !serverUrl.startsWith('https://')) {
+            document.body.innerHTML = `<h1 style="color:red;text-align:center;margin-top:100px">❌ Invalid ngrok URL</h1><p style="text-align:center">Go back to index.html and use the exact https://xxxx.ngrok-free.app URL from your laptop</p>`;
         }
-        if (!serverUrl) { document.body.innerHTML = "<h1 style='color:red'>No server URL provided. Go back to index.html</h1>"; }
 
-        console.log("🔗 Connecting to", serverUrl);
+        console.log("🔗 Trying to connect to:", serverUrl);
 
-        const socket = io(serverUrl);
+        const socket = io(serverUrl, {
+            transports: ['websocket'],      // ← THIS FIXES MOST NGROK ISSUES
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000
+        });
+
         let myTurn = false;
 
-        // === YOUR ORIGINAL GAME CODE (with tiny cleanups) ===
-        // (paste your entire <script> from original index.html here, but change the socket = io(); line to the one above)
+        socket.on('connect', () => {
+            console.log('✅ Socket.IO connected successfully to ngrok!');
+            const n = document.getElementById('name').value || "Player";
+            socket.emit('joinGame', { name: n });
+        });
 
-        // The rest is identical except:
-        // - socket.on('connect', ...) is now automatic
-        // - I fixed the gameMode value and a couple tiny bugs (online property, etc.)
+        socket.on('connect_error', (err) => {
+            console.error('❌ Connection failed:', err.message);
+            console.error('Tip: Make sure ngrok is still running and you copied the https URL exactly.');
+            document.getElementById('playerList').innerHTML = `<span style="color:red">Connection failed — check console (F12)</span>`;
+        });
 
-        // Full cleaned script would be too long here — reply "give me full game.html" if you want the complete pasted version with your exact styling + fixed select values.
+        function join() {
+            const n = document.getElementById('name').value;
+            if (!n) return alert("Pick a name!");
+            socket.emit('joinGame', { name: n });
+        }
+
+        function start() {
+            socket.emit('startGame', {
+                mode: document.getElementById('gameMode').value,
+                stackLower: document.getElementById('stackLower').checked
+            });
+        }
+
+        function draw() { socket.emit('drawCard'); }
+
+        socket.on('updateLobby', (ps) => {
+            document.getElementById('playerList').innerHTML = ps.map(p => `
+                <div class="player-card ${p.id === socket.id ? 'is-me' : ''}">
+                    <b>${p.name}</b>
+                </div>`).join('');
+        });
+
+        socket.on('gameState', (gs) => {
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            myTurn = gs.isMyTurn;
+            document.getElementById('playerList').innerHTML = gs.players.map((p, i) => `
+                <div class="player-card ${i === gs.turnIndex ? 'player-active' : ''} ${p.id === gs.myId ? 'is-me' : ''}">
+                    <b>${p.name}</b><br>Cards: ${p.cardCount}
+                </div>`).join('');
+            const status = document.getElementById('status');
+            status.innerText = gs.drawPenalty > 0 ? `+${gs.drawPenalty}!` : (gs.isMyTurn ? "YOUR TURN" : "WAITING...");
+            const tc = document.getElementById('topCard');
+            const val = gs.topCard.value || gs.topCard.type || '?';
+            tc.className = `card ${gs.topCard.color}`;
+            tc.setAttribute('data-value', val);
+            tc.innerHTML = `<div class="card-inner">${val}</div>`;
+            const handDiv = document.getElementById('hand');
+            handDiv.innerHTML = '';
+            gs.myHand.forEach((card, i) => {
+                const cDiv = document.createElement('div');
+                const v = card.value || card.type || '?';
+                cDiv.className = `card ${card.color}`;
+                cDiv.setAttribute('data-value', v);
+                cDiv.innerHTML = `<div class="card-inner">${v}</div>`;
+                cDiv.onclick = () => play(i, card);
+                handDiv.appendChild(cDiv);
+            });
+        });
+
+        function play(idx, card) {
+            if (!myTurn) return;
+            let data = { cardIndex: idx };
+            if (card.color === 'Wild') {
+                data.chosenColor = prompt("Red, Green, Blue, or Yellow?", "Red");
+                if (!data.chosenColor) data.chosenColor = "Red";
+            }
+            socket.emit('playCard', data);
+        }
+
+        socket.on('gameOver', (w) => {
+            document.getElementById('winnerName').innerText = w;
+            document.getElementById('winnerScreen').style.display = 'flex';
+        });
+
+        socket.on('error', (m) => alert(m));
+        socket.on('kicked', (msg) => { alert(msg); location.reload(); });
     </script>
 </body>
 </html>
