@@ -9,7 +9,8 @@
         
         :root {
             --dr-pepper-red: #C8102E;
-            --dr-pepper-dark: #8B0019;
+            --royal-blue: #4169E1;
+            --royal-blue-dark: #2C4E9C;
         }
         
         * {
@@ -27,7 +28,6 @@
             flex-direction: column;
             align-items: center;
             padding: 20px 10px;
-            line-height: 1.6;
         }
         
         header {
@@ -48,7 +48,6 @@
         .subtitle {
             font-size: 1.3rem;
             opacity: 0.95;
-            font-weight: 400;
         }
         
         .container {
@@ -71,16 +70,16 @@
             display: block;
             width: 100%;
             padding: 22px 28px;
-            background-color: white;
-            color: var(--dr-pepper-red);
+            background-color: var(--royal-blue);
+            color: white;
             font-size: 1.35rem;
             font-weight: 600;
             text-align: left;
             text-decoration: none;
             border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-            border: 3px solid var(--dr-pepper-dark);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+            border: 2px solid var(--royal-blue-dark);   /* Smaller border */
             position: relative;
             overflow: hidden;
         }
@@ -88,7 +87,7 @@
         .button:hover {
             transform: translateY(-4px) scale(1.02);
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
-            background-color: #f8f8f8;
+            background-color: #5178e8;
         }
         
         .button:active {
@@ -102,13 +101,12 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 1.6rem;
-            opacity: 0.7;
+            opacity: 0.85;
             transition: all 0.3s;
         }
         
         .button:hover::after {
             transform: translateY(-50%) translateX(6px);
-            opacity: 1;
         }
         
         footer {
@@ -153,13 +151,11 @@
     </div>
 
     <script>
-        // Fetch and render buttons from directories.json
         async function loadDirectories() {
             const container = document.getElementById('buttons-container');
             const loading = document.getElementById('loading');
             
             try {
-                // For GitHub Pages, use relative path
                 const response = await fetch('directories.json');
                 
                 if (!response.ok) {
@@ -168,13 +164,12 @@
                 
                 const directories = await response.json();
                 
-                // Clear loading message
                 loading.style.display = 'none';
                 container.innerHTML = '';
                 
-                // directories should be an array of [title, url] arrays
-                if (!Array.isArray(directories)) {
-                    throw new Error('Invalid JSON format');
+                if (!Array.isArray(directories) || directories.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; padding:40px; opacity:0.8;">No links found. Add entries to directories.json</p>';
+                    return;
                 }
                 
                 directories.forEach(([title, url]) => {
@@ -188,21 +183,15 @@
                         container.appendChild(button);
                     }
                 });
-                
-                if (directories.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; padding:40px; opacity:0.8;">No directories found. Add entries to directories.json</p>';
-                }
             } catch (error) {
-                console.error('Error loading directories:', error);
+                console.error('Error:', error);
                 loading.innerHTML = `
                     <strong>Error loading directories.json</strong><br><br>
-                    Make sure the file exists in the same folder as index.html<br><br>
-                    <small>${error.message}</small>
+                    Make sure the file is in the same folder as index.html
                 `;
             }
         }
         
-        // Load when page is ready
         window.addEventListener('load', loadDirectories);
     </script>
 </body>
