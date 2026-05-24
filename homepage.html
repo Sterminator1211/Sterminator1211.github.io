@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        
+        :root {
+            --dr-pepper-red: #C8102E;
+            --dr-pepper-dark: #8B0019;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dr-pepper-red);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+            line-height: 1.6;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            letter-spacing: -2px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 720px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .button {
+            display: block;
+            width: 100%;
+            padding: 22px 28px;
+            background-color: white;
+            color: var(--dr-pepper-red);
+            font-size: 1.35rem;
+            font-weight: 600;
+            text-align: left;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            border: 3px solid var(--dr-pepper-dark);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+            background-color: #f8f8f8;
+        }
+        
+        .button:active {
+            transform: translateY(2px);
+        }
+        
+        .button::after {
+            content: '→';
+            position: absolute;
+            right: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.6rem;
+            opacity: 0.7;
+            transition: all 0.3s;
+        }
+        
+        .button:hover::after {
+            transform: translateY(-50%) translateX(6px);
+            opacity: 1;
+        }
+        
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.8rem;
+            }
+            .button {
+                padding: 20px 24px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Homepage</h1>
+        <p class="subtitle">Quick Links Directory</p>
+    </header>
+    
+    <div class="container">
+        <div id="buttons-container" class="buttons-container">
+            <!-- Buttons will be dynamically added here -->
+        </div>
+        
+        <div id="loading" class="loading">
+            Loading directories...
+        </div>
+    </div>
+
+    <script>
+        // Fetch and render buttons from directories.json
+        async function loadDirectories() {
+            const container = document.getElementById('buttons-container');
+            const loading = document.getElementById('loading');
+            
+            try {
+                // For GitHub Pages, use relative path
+                const response = await fetch('directories.json');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load directories.json');
+                }
+                
+                const directories = await response.json();
+                
+                // Clear loading message
+                loading.style.display = 'none';
+                container.innerHTML = '';
+                
+                // directories should be an array of [title, url] arrays
+                if (!Array.isArray(directories)) {
+                    throw new Error('Invalid JSON format');
+                }
+                
+                directories.forEach(([title, url]) => {
+                    if (typeof title === 'string' && typeof url === 'string') {
+                        const button = document.createElement('a');
+                        button.href = url;
+                        button.target = '_blank';
+                        button.rel = 'noopener noreferrer';
+                        button.className = 'button';
+                        button.textContent = title;
+                        container.appendChild(button);
+                    }
+                });
+                
+                if (directories.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; padding:40px; opacity:0.8;">No directories found. Add entries to directories.json</p>';
+                }
+            } catch (error) {
+                console.error('Error loading directories:', error);
+                loading.innerHTML = `
+                    <strong>Error loading directories.json</strong><br><br>
+                    Make sure the file exists in the same folder as index.html<br><br>
+                    <small>${error.message}</small>
+                `;
+            }
+        }
+        
+        // Load when page is ready
+        window.addEventListener('load', loadDirectories);
+    </script>
+</body>
+</html>
