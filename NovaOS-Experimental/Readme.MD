@@ -1,0 +1,4 @@
+- Broken : 
+-1- # Mobile is not sized currectly
+-2- # Some permissions currently do not work on IOS
+-3- # Accounts and account details cannot save, We are currently working on the feature to save account data to the cloud (for privacy reasons).
