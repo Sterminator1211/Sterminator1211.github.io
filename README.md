@@ -1,3 +1,1 @@
-- Broken : 
--1- # Mobile is not sized currectly
--2- # Some permissions currently do not work on IOS
+
