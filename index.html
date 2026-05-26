@@ -42,7 +42,6 @@
         
         .buttons-container { display: flex; flex-direction: column; gap: 16px; }
 
-        /* The Button Base */
         .button-wrapper {
             position: relative;
             width: 100%;
@@ -52,6 +51,11 @@
             border: 2px solid var(--royal-blue-dark);
             background-color: var(--royal-blue);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+        }
+
+        .button-wrapper:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
         }
 
         .main-btn, .sub-link {
@@ -64,39 +68,65 @@
             text-align: left;
             text-decoration: none;
             cursor: pointer;
-            transition: background 0.2s;
             border: none;
             background: none;
             font-family: inherit;
+            transition: all 0.2s ease;
         }
 
-        .main-btn:hover, .sub-link:hover { background-color: rgba(255,255,255,0.1); }
+        /* The arrow indicator for expandable buttons */
+        .has-sub::after {
+            content: ' ▾';
+            float: right;
+            opacity: 0.7;
+            transition: transform 0.3s;
+        }
 
-        /* Multi-Link Layout */
+        /* --- Active State Layout --- */
+        
+        /* When active, the top row becomes a label */
+        .button-wrapper.active .main-btn {
+            padding: 10px 28px; /* Shorter row */
+            font-size: 0.9rem;   /* Smaller text */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background-color: rgba(0, 0, 0, 0.2);
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        /* Hide the arrow when it's already expanded */
+        .button-wrapper.active .has-sub::after {
+            display: none;
+        }
+
         .sub-links-container {
-            display: none; /* Hidden by default */
-            flex-direction: row; /* Horizontal split */
-            background: var(--royal-blue-dark);
+            display: none;
+            flex-direction: row;
+            background-color: var(--royal-blue-dark);
+        }
+
+        .button-wrapper.active .sub-links-container {
+            display: flex;
         }
 
         .sub-link {
             flex: 1;
-            font-size: 1rem;
-            padding: 15px 10px;
+            font-size: 1.1rem;
+            padding: 20px 10px;
             text-align: center;
-            border-right: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .sub-link:last-child { border-right: none; }
+        .sub-link:hover { background-color: rgba(255, 255, 255, 0.1); }
 
-        /* Toggle State */
-        .button-wrapper.active .main-btn { display: none; }
-        .button-wrapper.active .sub-links-container { display: flex; }
-
-        /* Indicator for multi-links */
-        .has-sub::after { content: ' ▾'; opacity: 0.6; }
-
-        .loading { text-align: center; padding: 40px; font-size: 1.2rem; }
+        .loading { text-align: center; padding: 40px; font-size: 1.2rem; opacity: 0.9; }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 2.8rem; }
+            .sub-link { font-size: 0.9rem; padding: 15px 5px; }
+        }
     </style>
 </head>
 <body>
@@ -127,15 +157,16 @@
                     wrapper.className = 'button-wrapper';
 
                     if (typeof data === 'string') {
-                        // Regular Single Link
+                        // Regular Link
                         const link = document.createElement('a');
                         link.href = data;
                         link.className = 'main-btn';
                         link.textContent = title;
                         link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
                         wrapper.appendChild(link);
                     } else {
-                        // Multi-Link Logic
+                        // Multi-Link (Array structure from previous fix)
                         const mainBtn = document.createElement('button');
                         mainBtn.className = 'main-btn has-sub';
                         mainBtn.textContent = title;
@@ -143,17 +174,19 @@
                         const subContainer = document.createElement('div');
                         subContainer.className = 'sub-links-container';
 
-                        // Create sub-buttons from the object
-                        Object.entries(data).forEach(([subTitle, url]) => {
+                        data.forEach(([subTitle, url]) => {
                             const subLink = document.createElement('a');
                             subLink.href = url;
                             subLink.className = 'sub-link';
                             subLink.textContent = subTitle;
                             subLink.target = '_blank';
+                            subLink.rel = 'noopener noreferrer';
                             subContainer.appendChild(subLink);
                         });
 
-                        mainBtn.onclick = () => wrapper.classList.add('active');
+                        mainBtn.onclick = () => {
+                            wrapper.classList.add('active');
+                        };
                         
                         wrapper.appendChild(mainBtn);
                         wrapper.appendChild(subContainer);
@@ -162,7 +195,7 @@
                     container.appendChild(wrapper);
                 });
             } catch (error) {
-                loading.innerHTML = `<strong>Error loading configuration.</strong>`;
+                loading.innerHTML = `<strong>Error loading directories.json</strong>`;
             }
         }
         
