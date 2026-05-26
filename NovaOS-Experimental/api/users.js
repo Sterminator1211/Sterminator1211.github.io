@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -19,7 +18,7 @@ export default async function handler(req, res) {
       if (action === 'login') {
         return res.status(200).json({ 
           success: true, 
-          user: { username: username || "test", notes: "", settings: {} } 
+          user: { username: username || "user", notes: "", settings: {} } 
         });
       }
 
@@ -33,6 +32,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ success: true });
     } catch (err) {
+      console.error(err);
       return res.status(500).json({ error: err.message });
     }
   }
