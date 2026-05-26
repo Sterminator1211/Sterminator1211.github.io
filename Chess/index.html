@@ -88,6 +88,7 @@
             margin-bottom: 15px;
             text-align: center;
             font-weight: bold;
+            min-height: 1.6em;
         }
         
         button {
@@ -123,7 +124,7 @@
     </style>
 </head>
 <body>
-    <h1>♟️ Local Chess (Casual Mode) ♟️</h1>
+    <h1>♟️ Local Chess (Casual) ♟️</h1>
     <div class="game-container">
         <div id="board"></div>
         
@@ -166,6 +167,7 @@
         let moveHistory = [];
         let capturedWhite = [];
         let capturedBlack = [];
+        let gameOver = false;
 
         let castlingRights = {
             whiteKingSide: true,
@@ -173,8 +175,6 @@
             blackKingSide: true,
             blackQueenSide: true
         };
-
-        let kingPositions = { white: [7, 4], black: [0, 4] };
 
         const files = 'abcdefgh';
 
@@ -211,6 +211,8 @@
         }
 
         function handleSquareClick(e) {
+            if (gameOver) return;
+            
             const row = parseInt(e.currentTarget.dataset.row);
             const col = parseInt(e.currentTarget.dataset.col);
             const piece = board[row][col];
@@ -377,10 +379,6 @@
                 board[tr][rookFrom] = null;
             }
 
-            if (piece.toLowerCase() === 'k') {
-                kingPositions[isWhite ? 'white' : 'black'] = [tr, tc];
-            }
-
             // Update castling rights
             if (piece.toLowerCase() === 'k') {
                 if (isWhite) castlingRights.whiteKingSide = castlingRights.whiteQueenSide = false;
@@ -402,12 +400,28 @@
             board[tr][tc] = piece;
             board[fr][fc] = null;
 
+            // Pawn promotion
             if (piece === 'P' && tr === 0) board[tr][tc] = 'Q';
             if (piece === 'p' && tr === 7) board[tr][tc] = 'q';
 
             moveHistory.push(getMoveNotation(fr, fc, tr, tc, piece, captured));
             updateMoveHistory();
             createBoard();
+
+            // Check if a king was captured
+            const whiteKingExists = board.flat().includes('K');
+            const blackKingExists = board.flat().includes('k');
+
+            if (!whiteKingExists) {
+                gameOver = true;
+                document.getElementById('status').innerHTML = '🎉 <span style="color:#ff4444">Black wins!</span> (White King captured)';
+                return;
+            }
+            if (!blackKingExists) {
+                gameOver = true;
+                document.getElementById('status').innerHTML = '🎉 <span style="color:#ff4444">White wins!</span> (Black King captured)';
+                return;
+            }
 
             currentTurn = currentTurn === 'white' ? 'black' : 'white';
             document.getElementById('status').textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)}'s turn`;
@@ -456,8 +470,8 @@
             moveHistory = [];
             capturedWhite = [];
             capturedBlack = [];
+            gameOver = false;
             castlingRights = { whiteKingSide: true, whiteQueenSide: true, blackKingSide: true, blackQueenSide: true };
-            kingPositions = { white: [7,4], black: [0,4] };
             
             document.getElementById('status').textContent = "White's turn";
             document.getElementById('move-history').innerHTML = '';
