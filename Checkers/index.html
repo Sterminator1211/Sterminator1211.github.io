@@ -32,7 +32,6 @@
             gap: 30px;
             flex-wrap: wrap;
             justify-content: center;
-            align-items: flex-start;
         }
 
         #board {
@@ -108,9 +107,7 @@
             margin-top: 10px;
         }
 
-        button:hover {
-            background: #5c4730;
-        }
+        button:hover { background: #5c4730; }
 
         .captured {
             display: flex;
@@ -123,7 +120,7 @@
 </head>
 <body>
     <h1>🔴 Checkers Arena 🔴</h1>
-    <p class="subtitle">Local 2-Player Checkers</p>
+    <p class="subtitle">Local 2-Player • With King Promotion & Multi-Jumps</p>
 
     <div class="game-container">
         <div id="board"></div>
@@ -146,14 +143,13 @@
 
     <script>
         let board = Array(8).fill().map(() => Array(8).fill(null));
-        let currentTurn = 'red'; // red = bottom, black = top
+        let currentTurn = 'red';
         let selectedPiece = null;
         let moveHistory = [];
         let capturedRed = [];
         let capturedBlack = [];
         let gameOver = false;
 
-        // Initialize standard checkers setup
         function initBoard() {
             board = Array(8).fill().map(() => Array(8).fill(null));
             
@@ -183,18 +179,13 @@
                     square.dataset.row = row;
                     square.dataset.col = col;
                     
-                    if ((row + col) % 2 === 0) {
-                        square.classList.add('light');
-                    } else {
-                        square.classList.add('dark');
-                    }
+                    if ((row + col) % 2 === 0) square.classList.add('light');
+                    else square.classList.add('dark');
                     
                     const piece = board[row][col];
                     if (piece) {
-                        square.innerHTML = piece === 'r' || piece === 'R' ? '🔴' : '⚫';
-                        if (piece === 'R' || piece === 'B') {
-                            square.style.fontSize = '32px';
-                        }
+                        square.innerHTML = (piece === 'r' || piece === 'R') ? '🔴' : '⚫';
+                        if (piece === 'R' || piece === 'B') square.style.fontSize = '34px';
                     }
                     
                     square.addEventListener('click', handleClick);
@@ -261,29 +252,25 @@
         function isValidMove(fr, fc, tr, tc) {
             if (fr === tr && fc === tc) return false;
             const piece = board[fr][fc];
-            if (!piece) return false;
-            if (board[tr][tc]) return false;
+            if (!piece || board[tr][tc]) return false;
 
             const isKing = piece === 'R' || piece === 'B';
             const color = (piece === 'r' || piece === 'R') ? 'red' : 'black';
-            const direction = color === 'red' ? -1 : 1;
-
+            const dir = color === 'red' ? -1 : 1;
             const rowDiff = tr - fr;
             const colDiff = Math.abs(tc - fc);
 
             // Normal move
-            if (colDiff === 1 && (rowDiff === direction || (isKing && Math.abs(rowDiff) === 1))) {
+            if (colDiff === 1 && (rowDiff === dir || (isKing && Math.abs(rowDiff) === 1))) {
                 return true;
             }
 
-            // Jump capture
+            // Capture jump
             if (colDiff === 2 && Math.abs(rowDiff) === 2) {
                 const midRow = (fr + tr) / 2;
                 const midCol = (fc + tc) / 2;
                 const midPiece = board[midRow][midCol];
-                if (midPiece && !isSameColor(piece, midPiece)) {
-                    return true;
-                }
+                return midPiece && !isSameColor(piece, midPiece);
             }
 
             return false;
@@ -295,7 +282,7 @@
                     if (isValidMove(row, col, r, c)) {
                         const sq = getSquareElement(r, c);
                         sq.classList.add('highlight');
-                        if (board[r][c]) sq.classList.add('capture');
+                        if (Math.abs(r - row) === 2) sq.classList.add('capture');
                         else sq.classList.add('possible');
                     }
                 }
@@ -304,26 +291,28 @@
 
         function makeMove(fr, fc, tr, tc) {
             const piece = board[fr][fc];
-            const isKing = piece === 'R' || piece === 'B';
             const color = (piece === 'r' || piece === 'R') ? 'red' : 'black';
+            let capturedThisTurn = false;
 
             // Handle capture
             if (Math.abs(tr - fr) === 2) {
                 const midRow = (fr + tr) / 2;
                 const midCol = (fc + tc) / 2;
-                const captured = board[midRow][midCol];
+                const capturedPiece = board[midRow][midCol];
                 
                 board[midRow][midCol] = null;
-                if (color === 'red') capturedBlack.push(captured);
-                else capturedRed.push(captured);
+                if (color === 'red') capturedBlack.push(capturedPiece);
+                else capturedRed.push(capturedPiece);
+                capturedThisTurn = true;
                 updateCaptured();
             }
 
-            // Move piece
+            // Move the piece
             board[tr][tc] = piece;
             board[fr][fc] = null;
 
-            // King promotion
+            // === KING PROMOTION ===
+            const isKing = piece === 'R' || piece === 'B';
             if (!isKing) {
                 if ((color === 'red' && tr === 0) || (color === 'black' && tr === 7)) {
                     board[tr][tc] = color === 'red' ? 'R' : 'B';
@@ -334,24 +323,23 @@
             updateMoveHistory();
             createBoard();
 
-            // Check win condition
-            const redPieces = board.flat().filter(p => p === 'r' || p === 'R').length;
-            const blackPieces = board.flat().filter(p => p === 'b' || p === 'B').length;
+            // Check for win
+            const redCount = board.flat().filter(p => p === 'r' || p === 'R').length;
+            const blackCount = board.flat().filter(p => p === 'b' || p === 'B').length;
 
-            if (redPieces === 0) {
+            if (redCount === 0) {
                 gameOver = true;
                 document.getElementById('status').innerHTML = '🎉 Black Wins!';
                 return;
             }
-            if (blackPieces === 0) {
+            if (blackCount === 0) {
                 gameOver = true;
                 document.getElementById('status').innerHTML = '🎉 Red Wins!';
                 return;
             }
 
             currentTurn = currentTurn === 'red' ? 'black' : 'red';
-            document.getElementById('status').textContent = 
-                `${currentTurn === 'red' ? 'Red' : 'Black'}'s Turn`;
+            document.getElementById('status').textContent = `${currentTurn === 'red' ? 'Red' : 'Black'}'s Turn`;
 
             selectedPiece = null;
             clearHighlights();
