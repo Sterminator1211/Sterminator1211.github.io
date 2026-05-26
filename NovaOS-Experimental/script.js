@@ -1,29 +1,39 @@
-// ==================== NOVAOS v1.4 - Vercel Blob Persistent Version ====================
+// ==================== NOVAOS v1.4 - Vercel Version ====================
 let currentUser = "";
 let currentDate = new Date();
 
 const API_URL = "/api/users";
 
-// ==================== API HELPER ====================
+// ==================== IMPROVED API HELPER ====================
 async function apiRequest(action, body = {}) {
   try {
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json" 
+      },
       body: JSON.stringify({ action, ...body })
     });
-    return await res.json();
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data;
   } catch (err) {
-    console.error(err);
-    return { error: "Server connection failed" };
+    console.error("API Error:", err);
+    return { error: err.message || "Server connection failed" };
   }
 }
 
 async function loadAllData() {
   try {
     const res = await fetch(API_URL);
+    if (!res.ok) throw new Error("Failed to load data");
     return await res.json();
-  } catch {
+  } catch (err) {
+    console.error(err);
     return { users: [] };
   }
 }
@@ -55,13 +65,13 @@ async function handleLogin() {
 
   const result = await apiRequest("login", { username, password });
 
-  if (result.success && result.user) {
+  if (result.success) {
     currentUser = username;
     document.getElementById("user-display").innerText = `Logged in as: ${username}`;
     showView("home-page");
     loadUserData();
   } else {
-    errorMsg.textContent = "Invalid username or password";
+    errorMsg.textContent = result.error || "Invalid username or password";
   }
 }
 
@@ -159,15 +169,8 @@ function renderCalendar() {
   }
 }
 
-function prevMonth() {
-  currentDate.setMonth(currentDate.getMonth() - 1);
-  renderCalendar();
-}
-
-function nextMonth() {
-  currentDate.setMonth(currentDate.getMonth() + 1);
-  renderCalendar();
-}
+function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
+function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
 
 // ==================== CALCULATOR ====================
 let calcExpression = "";
@@ -212,19 +215,13 @@ async function handleTranslate() {
   try {
     const res = await fetch("https://libretranslate.de/translate", {
       method: "POST",
-      body: JSON.stringify({
-        q: inputText,
-        source: sourceLang,
-        target: targetLang,
-        format: "text"
-      }),
+      body: JSON.stringify({ q: inputText, source: sourceLang, target: targetLang, format: "text" }),
       headers: { "Content-Type": "application/json" }
     });
-
     const data = await res.json();
     outputEl.innerText = data.translatedText || "No translation available.";
   } catch (error) {
-    outputEl.innerHTML = '<span style="color:red;">Translation failed. Service may be down.</span>';
+    outputEl.innerHTML = '<span style="color:red;">Translation failed.</span>';
   }
 }
 
@@ -250,8 +247,6 @@ function fetchWeather() {
       try {
         const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
         const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error("API failed");
-
         const data = await res.json();
         const weather = data.current_weather;
 
@@ -274,25 +269,12 @@ function updateWeatherUI(code) {
   const iconEl = document.getElementById("weather-icon");
   const descEl = document.getElementById("weather-desc");
 
-  if (code === 0) {
-    iconEl.innerText = "☀️";
-    descEl.innerText = "Clear Sky";
-  } else if (code <= 3) {
-    iconEl.innerText = "⛅";
-    descEl.innerText = "Partly Cloudy";
-  } else if (code <= 48) {
-    iconEl.innerText = "🌫️";
-    descEl.innerText = "Foggy";
-  } else if (code <= 67) {
-    iconEl.innerText = "🌧️";
-    descEl.innerText = "Rain";
-  } else if (code <= 77) {
-    iconEl.innerText = "❄️";
-    descEl.innerText = "Snow";
-  } else {
-    iconEl.innerText = "⛈️";
-    descEl.innerText = "Storm";
-  }
+  if (code === 0) { iconEl.innerText = "☀️"; descEl.innerText = "Clear Sky"; }
+  else if (code <= 3) { iconEl.innerText = "⛅"; descEl.innerText = "Partly Cloudy"; }
+  else if (code <= 48) { iconEl.innerText = "🌫️"; descEl.innerText = "Foggy"; }
+  else if (code <= 67) { iconEl.innerText = "🌧️"; descEl.innerText = "Rain"; }
+  else if (code <= 77) { iconEl.innerText = "❄️"; descEl.innerText = "Snow"; }
+  else { iconEl.innerText = "⛈️"; descEl.innerText = "Storm"; }
 }
 
 // ==================== CLOCK ====================
@@ -301,11 +283,7 @@ function updateClock() {
   const is12 = localStorage.getItem("pref_clock_12") === "true";
   const showSecs = localStorage.getItem("pref_show_seconds") !== "false";
 
-  let options = {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: is12
-  };
+  let options = { hour: "2-digit", minute: "2-digit", hour12: is12 };
   if (showSecs) options.second = "2-digit";
 
   const timeString = now.toLocaleTimeString(is12 ? "en-US" : "en-GB", options);
@@ -317,107 +295,26 @@ function updateClock() {
   });
 }
 
-// ==================== SETTINGS ====================
-function updateSystemColor(color) {
-  document.documentElement.style.setProperty("--system-color", color);
-}
-
+// ==================== SETTINGS (Basic) ====================
 function toggleSettingsMenu() {
   const menu = document.getElementById("settings-menu");
   menu.classList.toggle("hidden");
-  if (!document.querySelector(".tab-pane:not(.hidden)")) {
-    showSettingsTab("appearance");
-  }
 }
 
 function showSettingsTab(tab) {
-  const tabs = ["appearance", "wallpaper", "preferences", "privacy", "permissions"];
-  tabs.forEach(t => {
-    const el = document.getElementById("tab-" + t);
-    if (el) el.classList.add("hidden");
-  });
+  document.querySelectorAll(".tab-pane").forEach(el => el.classList.add("hidden"));
   const active = document.getElementById("tab-" + tab);
   if (active) active.classList.remove("hidden");
-}
-
-function toggleUnits() {
-  const isImperial = document.getElementById("unit-toggle").checked;
-  localStorage.setItem("pref_units", isImperial ? "imperial" : "metric");
-  document.getElementById("unit-label").innerText = isImperial ? "Imperial (°F)" : "Metric (°C)";
-  fetchWeather();
-}
-
-function toggleWeatherWidget() {
-  const isVisible = document.getElementById("weather-toggle").checked;
-  localStorage.setItem("pref_show_weather", isVisible);
-  document.getElementById("weather-widget").style.display = isVisible ? "flex" : "none";
-  if (isVisible) fetchWeather();
-}
-
-function updateClockSettings() {
-  const is12 = document.getElementById("clock-format-toggle").checked;
-  const showSecs = document.getElementById("clock-seconds-toggle").checked;
-  localStorage.setItem("pref_clock_12", is12);
-  localStorage.setItem("pref_show_seconds", showSecs);
-  updateClock();
-}
-
-function toggleTheme() {
-  const isLight = document.getElementById("theme-toggle").checked;
-  document.body.classList.toggle("dark-mode", !isLight);
-  localStorage.setItem("pref_theme", isLight ? "light" : "dark");
-}
-
-function setSolidColor(color) {
-  const bg = document.getElementById("wallpaper-bg");
-  bg.style.backgroundImage = "none";
-  bg.style.backgroundColor = color;
-  localStorage.setItem("pref_color", color);
-  localStorage.removeItem("pref_img");
-}
-
-function uploadWallpaper(input) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      document.getElementById("wallpaper-bg").style.backgroundImage = `url(${e.target.result})`;
-      localStorage.setItem("pref_img", e.target.result);
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-function changeWeatherPosition(position) {
-  const widget = document.getElementById("weather-widget");
-  localStorage.setItem("pref_weather_pos", position);
-
-  widget.style.top = "";
-  widget.style.bottom = "";
-  widget.style.left = "";
-  widget.style.right = "";
-
-  switch (position) {
-    case "top-left":
-      widget.style.top = "30px"; widget.style.left = "30px";
-      break;
-    case "top-right":
-      widget.style.top = "30px"; widget.style.right = "120px";
-      break;
-    case "bottom-right":
-      widget.style.bottom = "30px"; widget.style.right = "120px";
-      break;
-    default:
-      widget.style.bottom = "30px"; widget.style.left = "30px";
-  }
 }
 
 function toggleIFrame() {
   const content = document.getElementById("main-content");
   let iframe = document.getElementById("web-iframe");
 
-  if (iframe) iframe.remove();
-  else {
-    let url = prompt("Enter full URL (e.g. https://example.com):");
+  if (iframe) {
+    iframe.remove();
+  } else {
+    let url = prompt("Enter full URL (https://example.com):");
     if (url) {
       if (!url.startsWith("http")) url = "https://" + url;
       iframe = document.createElement("iframe");
@@ -428,4 +325,4 @@ function toggleIFrame() {
   }
 }
 
-console.log("NovaOS v1.4 - Vercel Blob Edition Loaded");
+console.log("NovaOS v1.4 - Vercel Edition Loaded");
