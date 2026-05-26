@@ -1,109 +1,124 @@
-// ==================== NOVAOS - Main Script ====================
-let users = JSON.parse(localStorage.getItem("user_db")) || [
-  { username: "admin", password: "123" }
-];
+// ==================== NOVAOS v1.4 - Vercel Blob Persistent Version ====================
 let currentUser = "";
 let currentDate = new Date();
 
-// ==================== INITIAL LOAD ====================
-window.onload = () => {
-  const savedColor = localStorage.getItem("pref_color");
-  const savedImg = localStorage.getItem("pref_img");
-  const savedTheme = localStorage.getItem("pref_theme");
-  const savedSysColor = localStorage.getItem("pref_sys_color") || "#007bff";
-  const savedUnits = localStorage.getItem("pref_units") || "metric";
-  const showWeather = localStorage.getItem("pref_show_weather") !== "false";
-  const savedClock12 = localStorage.getItem("pref_clock_12") === "true";
-  const savedShowSeconds =
-    localStorage.getItem("pref_show_seconds") !== "false";
-  const savedWeatherPos =
-    localStorage.getItem("pref_weather_pos") || "bottom-left";
+const API_URL = "/api/users";
 
-  const bg = document.getElementById("wallpaper-bg");
-  if (savedImg) bg.style.backgroundImage = `url(${savedImg})`;
-  else if (savedColor) bg.style.backgroundColor = savedColor;
-
-  if (savedTheme === "light") {
-    document.body.classList.remove("dark-mode");
-    const themeToggle = document.getElementById("theme-toggle");
-    if (themeToggle) themeToggle.checked = true;
+// ==================== API HELPER ====================
+async function apiRequest(action, body = {}) {
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...body })
+    });
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return { error: "Server connection failed" };
   }
+}
 
-  // Restore UI states
-  const unitToggle = document.getElementById("unit-toggle");
-  if (unitToggle) unitToggle.checked = savedUnits === "imperial";
+async function loadAllData() {
+  try {
+    const res = await fetch(API_URL);
+    return await res.json();
+  } catch {
+    return { users: [] };
+  }
+}
 
-  const unitLabel = document.getElementById("unit-label");
-  if (unitLabel)
-    unitLabel.innerText =
-      savedUnits === "imperial" ? "Imperial (°F)" : "Metric (°C)";
-
-  const weatherToggle = document.getElementById("weather-toggle");
-  if (weatherToggle) weatherToggle.checked = showWeather;
-
-  const weatherWidget = document.getElementById("weather-widget");
-  if (weatherWidget)
-    weatherWidget.style.display = showWeather ? "flex" : "none";
-
-  const clock12Toggle = document.getElementById("clock-format-toggle");
-  if (clock12Toggle) clock12Toggle.checked = savedClock12;
-
-  const secondsToggle = document.getElementById("clock-seconds-toggle");
-  if (secondsToggle) secondsToggle.checked = savedShowSeconds;
-
-  // Restore Weather Position
-  document.getElementById("weather-position").value = savedWeatherPos;
-  changeWeatherPosition(savedWeatherPos);
-
-  updateSystemColor(savedSysColor);
-  const colorPicker = document.getElementById("system-color-picker");
-  if (colorPicker) colorPicker.value = savedSysColor;
-
-  loadPermStates();
+// ==================== INITIAL LOAD ====================
+window.onload = async () => {
   updateClock();
-
   setInterval(updateClock, 1000);
   setInterval(fetchWeather, 180000);
+
+  const savedTheme = localStorage.getItem("pref_theme");
+  if (savedTheme === "light") {
+    document.body.classList.remove("dark-mode");
+    const toggle = document.getElementById("theme-toggle");
+    if (toggle) toggle.checked = true;
+  }
 };
 
-// ==================== WEATHER POSITION ====================
-function changeWeatherPosition(position) {
-  const widget = document.getElementById("weather-widget");
-  localStorage.setItem("pref_weather_pos", position);
+// ==================== AUTH ====================
+async function handleLogin() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  const errorMsg = document.getElementById("error-msg");
 
-  // Reset all positions first
-  widget.style.top = "";
-  widget.style.bottom = "";
-  widget.style.left = "";
-  widget.style.right = "";
-
-  switch (position) {
-    case "top-left":
-      widget.style.top = "30px";
-      widget.style.left = "30px";
-      widget.style.bottom = "auto";
-      widget.style.right = "auto";
-      break;
-    case "top-right":
-      widget.style.top = "30px";
-      widget.style.right = "120px"; // Avoid overlapping sidebar
-      widget.style.bottom = "auto";
-      widget.style.left = "auto";
-      break;
-    case "bottom-right":
-      widget.style.bottom = "30px";
-      widget.style.right = "120px"; // Avoid overlapping sidebar
-      widget.style.top = "auto";
-      widget.style.left = "auto";
-      break;
-    case "bottom-left":
-    default:
-      widget.style.bottom = "30px";
-      widget.style.left = "30px";
-      widget.style.top = "auto";
-      widget.style.right = "auto";
-      break;
+  if (!username || !password) {
+    errorMsg.textContent = "Please enter username and password";
+    return;
   }
+
+  const result = await apiRequest("login", { username, password });
+
+  if (result.success && result.user) {
+    currentUser = username;
+    document.getElementById("user-display").innerText = `Logged in as: ${username}`;
+    showView("home-page");
+    loadUserData();
+  } else {
+    errorMsg.textContent = "Invalid username or password";
+  }
+}
+
+async function handleSignUp() {
+  const username = document.getElementById("new-username").value.trim();
+  const password = document.getElementById("new-password").value;
+
+  if (!username || !password) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  const result = await apiRequest("signup", { username, password });
+
+  if (result.success) {
+    alert("Account created successfully! Please log in.");
+    showView("login-page");
+  } else {
+    alert(result.error || "Failed to create account");
+  }
+}
+
+function handleLogout() {
+  currentUser = "";
+  showView("login-page");
+}
+
+// ==================== USER DATA ====================
+async function loadUserData() {
+  const data = await loadAllData();
+  const user = data.users.find(u => u.username === currentUser);
+  
+  if (user && user.notes) {
+    const notesInput = document.getElementById("notes-input");
+    if (notesInput) notesInput.value = user.notes;
+  }
+}
+
+async function saveNotes() {
+  if (!currentUser) return alert("Please login first");
+  
+  const notes = document.getElementById("notes-input").value;
+  const result = await apiRequest("save-notes", { username: currentUser, notes });
+  
+  if (result.success) {
+    alert("Notes saved successfully!");
+  } else {
+    alert("Failed to save notes");
+  }
+}
+
+// ==================== VIEW NAVIGATION ====================
+function showView(id) {
+  document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+
+  if (id === "calendar-page") renderCalendar();
 }
 
 // ==================== CALENDAR ====================
@@ -137,14 +152,9 @@ function renderCalendar() {
     dayEl.className = "calendar-day";
     dayEl.textContent = day;
 
-    if (
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear()
-    ) {
+    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
       dayEl.classList.add("today");
     }
-
     grid.appendChild(dayEl);
   }
 }
@@ -161,22 +171,18 @@ function nextMonth() {
 
 // ==================== CALCULATOR ====================
 let calcExpression = "";
-
 function appendToDisplay(value) {
   calcExpression += value;
   document.getElementById("calc-display").value = calcExpression;
 }
-
 function clearCalc() {
   calcExpression = "";
   document.getElementById("calc-display").value = "";
 }
-
 function deleteLast() {
   calcExpression = calcExpression.slice(0, -1);
   document.getElementById("calc-display").value = calcExpression;
 }
-
 function calculate() {
   const display = document.getElementById("calc-display");
   try {
@@ -189,7 +195,7 @@ function calculate() {
   }
 }
 
-// ==================== TRANSLATOR ====================
+// ==================== TRANSLATE ====================
 async function handleTranslate() {
   const inputText = document.getElementById("trans-input").value.trim();
   const sourceLang = document.getElementById("source-lang").value;
@@ -197,8 +203,7 @@ async function handleTranslate() {
   const outputEl = document.getElementById("trans-output");
 
   if (!inputText) {
-    outputEl.innerHTML =
-      '<span style="color:red;">Please enter text to translate.</span>';
+    outputEl.innerHTML = '<span style="color:red;">Please enter text to translate.</span>';
     return;
   }
 
@@ -216,14 +221,10 @@ async function handleTranslate() {
       headers: { "Content-Type": "application/json" }
     });
 
-    if (!res.ok) throw new Error("Service error");
-
     const data = await res.json();
     outputEl.innerText = data.translatedText || "No translation available.";
   } catch (error) {
-    console.error(error);
-    outputEl.innerHTML =
-      '<span style="color:red;">Translation failed. Service may be down.</span>';
+    outputEl.innerHTML = '<span style="color:red;">Translation failed. Service may be down.</span>';
   }
 }
 
@@ -253,20 +254,11 @@ function fetchWeather() {
 
         const data = await res.json();
         const weather = data.current_weather;
-        const unitPref = localStorage.getItem("pref_units") || "metric";
 
-        let displayTemp = weather.temperature;
-        let symbol = "°C";
-        if (unitPref === "imperial") {
-          displayTemp = (displayTemp * 9) / 5 + 32;
-          symbol = "°F";
-        }
-
-        tempEl.innerText = Math.round(displayTemp) + symbol;
+        tempEl.innerText = Math.round(weather.temperature) + "°C";
         updateWeatherUI(weather.weathercode);
         locEl.innerText = "Local Weather";
       } catch (e) {
-        console.error(e);
         descEl.innerText = "API Error";
         locEl.innerText = "Try again later";
       }
@@ -274,8 +266,7 @@ function fetchWeather() {
     (err) => {
       descEl.innerText = "Location Denied";
       locEl.innerText = "Check permissions";
-    },
-    { timeout: 10000 }
+    }
   );
 }
 
@@ -326,30 +317,22 @@ function updateClock() {
   });
 }
 
-// ==================== SETTINGS & PREFERENCES ====================
+// ==================== SETTINGS ====================
 function updateSystemColor(color) {
   document.documentElement.style.setProperty("--system-color", color);
-  localStorage.setItem("pref_sys_color", color);
 }
 
 function toggleSettingsMenu() {
   const menu = document.getElementById("settings-menu");
   menu.classList.toggle("hidden");
-
   if (!document.querySelector(".tab-pane:not(.hidden)")) {
     showSettingsTab("appearance");
   }
 }
 
 function showSettingsTab(tab) {
-  const tabs = [
-    "appearance",
-    "wallpaper",
-    "preferences",
-    "privacy",
-    "permissions"
-  ];
-  tabs.forEach((t) => {
+  const tabs = ["appearance", "wallpaper", "preferences", "privacy", "permissions"];
+  tabs.forEach(t => {
     const el = document.getElementById("tab-" + t);
     if (el) el.classList.add("hidden");
   });
@@ -360,18 +343,14 @@ function showSettingsTab(tab) {
 function toggleUnits() {
   const isImperial = document.getElementById("unit-toggle").checked;
   localStorage.setItem("pref_units", isImperial ? "imperial" : "metric");
-  document.getElementById("unit-label").innerText = isImperial
-    ? "Imperial (°F)"
-    : "Metric (°C)";
+  document.getElementById("unit-label").innerText = isImperial ? "Imperial (°F)" : "Metric (°C)";
   fetchWeather();
 }
 
 function toggleWeatherWidget() {
   const isVisible = document.getElementById("weather-toggle").checked;
   localStorage.setItem("pref_show_weather", isVisible);
-  document.getElementById("weather-widget").style.display = isVisible
-    ? "flex"
-    : "none";
+  document.getElementById("weather-widget").style.display = isVisible ? "flex" : "none";
   if (isVisible) fetchWeather();
 }
 
@@ -401,88 +380,43 @@ function uploadWallpaper(input) {
   if (input.files && input.files[0]) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      document.getElementById(
-        "wallpaper-bg"
-      ).style.backgroundImage = `url(${e.target.result})`;
+      document.getElementById("wallpaper-bg").style.backgroundImage = `url(${e.target.result})`;
       localStorage.setItem("pref_img", e.target.result);
     };
     reader.readAsDataURL(input.files[0]);
   }
 }
 
-// ==================== AUTH & NAVIGATION ====================
-function handleLogin() {
-  const u = document.getElementById("username").value.trim();
-  const p = document.getElementById("password").value;
-  const match = users.find(
-    (user) => user.username === u && user.password === p
-  );
+function changeWeatherPosition(position) {
+  const widget = document.getElementById("weather-widget");
+  localStorage.setItem("pref_weather_pos", position);
 
-  if (match) {
-    currentUser = u;
-    document.getElementById("user-display").innerText = "Logged in as: " + u;
-    showView("home-page");
-    if (localStorage.getItem("pref_show_weather") !== "false") fetchWeather();
-  } else {
-    document.getElementById("error-msg").innerText =
-      "Invalid username or password";
+  widget.style.top = "";
+  widget.style.bottom = "";
+  widget.style.left = "";
+  widget.style.right = "";
+
+  switch (position) {
+    case "top-left":
+      widget.style.top = "30px"; widget.style.left = "30px";
+      break;
+    case "top-right":
+      widget.style.top = "30px"; widget.style.right = "120px";
+      break;
+    case "bottom-right":
+      widget.style.bottom = "30px"; widget.style.right = "120px";
+      break;
+    default:
+      widget.style.bottom = "30px"; widget.style.left = "30px";
   }
 }
 
-function handleSignUp() {
-  const u = document.getElementById("new-username").value.trim();
-  const p = document.getElementById("new-password").value;
-
-  if (u && p) {
-    if (users.some((user) => user.username === u)) {
-      alert("Username already exists!");
-      return;
-    }
-    users.push({ username: u, password: p });
-    localStorage.setItem("user_db", JSON.stringify(users));
-    alert("Account Created Successfully!");
-    showView("login-page");
-  } else {
-    alert("Please fill all fields");
-  }
-}
-
-function handleLogout() {
-  currentUser = "";
-  const frame = document.getElementById("web-iframe");
-  if (frame) frame.remove();
-  showView("login-page");
-}
-
-function showView(id) {
-  document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-
-  if (id === "calendar-page") renderCalendar();
-  if (id === "notes-page" && currentUser) {
-    document.getElementById("notes-input").value =
-      localStorage.getItem("notes_" + currentUser) || "";
-  }
-}
-
-function saveNotes() {
-  if (currentUser) {
-    localStorage.setItem(
-      "notes_" + currentUser,
-      document.getElementById("notes-input").value
-    );
-    alert("Notes Saved!");
-  }
-}
-
-// ==================== IFRAME ====================
 function toggleIFrame() {
   const content = document.getElementById("main-content");
   let iframe = document.getElementById("web-iframe");
 
-  if (iframe) {
-    iframe.remove();
-  } else {
+  if (iframe) iframe.remove();
+  else {
     let url = prompt("Enter full URL (e.g. https://example.com):");
     if (url) {
       if (!url.startsWith("http")) url = "https://" + url;
@@ -494,62 +428,4 @@ function toggleIFrame() {
   }
 }
 
-// ==================== PERMISSIONS ====================
-async function requestBrowserPerm(apiName, shortName) {
-  const toggle = document.getElementById("perm-" + shortName);
-  let granted = false;
-
-  try {
-    if (apiName === "geolocation") {
-      await new Promise((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej)
-      );
-      granted = true;
-    } else if (apiName === "notifications") {
-      granted = (await Notification.requestPermission()) === "granted";
-    } else if (apiName === "microphone" || apiName === "camera") {
-      await navigator.mediaDevices.getUserMedia({
-        audio: apiName === "microphone",
-        video: apiName === "camera"
-      });
-      granted = true;
-    }
-  } catch (e) {
-    granted = false;
-  }
-
-  toggle.checked = granted;
-
-  if (granted) {
-    let perms = JSON.parse(localStorage.getItem("saved_permissions")) || [];
-    if (!perms.includes(apiName)) {
-      perms.push(apiName);
-      localStorage.setItem("saved_permissions", JSON.stringify(perms));
-    }
-  }
-}
-
-function loadPermStates() {
-  let perms = JSON.parse(localStorage.getItem("saved_permissions")) || [];
-  const map = {
-    geolocation: "geo",
-    notifications: "notify",
-    microphone: "mic",
-    camera: "cam"
-  };
-  perms.forEach((p) => {
-    if (map[p]) {
-      const el = document.getElementById("perm-" + map[p]);
-      if (el) el.checked = true;
-    }
-  });
-}
-
-function resetAllPermissions() {
-  localStorage.removeItem("saved_permissions");
-  ["geo", "notify", "mic", "cam"].forEach((id) => {
-    const el = document.getElementById("perm-" + id);
-    if (el) el.checked = false;
-  });
-  alert("All permissions have been reset.");
-}
+console.log("NovaOS v1.4 - Vercel Blob Edition Loaded");
