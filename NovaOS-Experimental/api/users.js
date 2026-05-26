@@ -1,39 +1,41 @@
 export default async function handler(req, res) {
-  // Allow both GET and POST
-  if (req.method !== 'GET' && req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const BLOB_PATH = 'data/users.json';
+  if (req.method === 'GET') {
+    return res.status(200).json({ users: [] });
+  }
 
-  try {
-    if (req.method === 'GET') {
-      // Return empty data for now (we'll improve later)
-      return res.status(200).json({ users: [] });
-    }
+  if (req.method === 'POST') {
+    try {
+      const { action, username, password, notes } = req.body || {};
 
-    if (req.method === 'POST') {
-      const { action, username, password, notes, settings } = req.body;
-
-      // Simple simulation for now - we'll connect real Blob later
-      if (action === 'signup') {
-        return res.status(200).json({ success: true });
-      }
       if (action === 'login') {
         return res.status(200).json({ 
           success: true, 
-          user: { username, password, notes: "", settings: {} } 
+          user: { username: username || "test", notes: "", settings: {} } 
         });
       }
+
+      if (action === 'signup') {
+        return res.status(200).json({ success: true });
+      }
+
       if (action === 'save-notes') {
         return res.status(200).json({ success: true });
       }
-      if (action === 'save-settings') {
-        return res.status(200).json({ success: true });
-      }
+
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
     }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: error.message });
   }
+
+  return res.status(405).json({ error: 'Method not allowed' });
 }
