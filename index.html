@@ -13,11 +13,7 @@
             --royal-blue-dark: #2C4E9C;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Roboto', sans-serif;
@@ -29,26 +25,10 @@
             align-items: center;
             padding: 20px 10px;
         }
-        
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            width: 100%;
-            max-width: 800px;
-        }
-        
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            letter-spacing: -2px;
-        }
-        
-        .subtitle {
-            font-size: 1.3rem;
-            opacity: 0.95;
-        }
+
+        header { text-align: center; margin-bottom: 40px; width: 100%; max-width: 800px; }
+        h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 10px; text-shadow: 0 4px 8px rgba(0,0,0,0.3); letter-spacing: -2px; }
+        .subtitle { font-size: 1.3rem; opacity: 0.95; }
         
         .container {
             width: 100%;
@@ -60,78 +40,63 @@
             backdrop-filter: blur(10px);
         }
         
-        .buttons-container {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+        .buttons-container { display: flex; flex-direction: column; gap: 16px; }
+
+        /* The Button Base */
+        .button-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 2px solid var(--royal-blue-dark);
+            background-color: var(--royal-blue);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
         }
-        
-        .button {
+
+        .main-btn, .sub-link {
             display: block;
             width: 100%;
             padding: 22px 28px;
-            background-color: var(--royal-blue);
             color: white;
             font-size: 1.35rem;
             font-weight: 600;
             text-align: left;
             text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-            border: 2px solid var(--royal-blue-dark);   /* Smaller border */
-            position: relative;
-            overflow: hidden;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+            font-family: inherit;
         }
-        
-        .button:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
-            background-color: #5178e8;
+
+        .main-btn:hover, .sub-link:hover { background-color: rgba(255,255,255,0.1); }
+
+        /* Multi-Link Layout */
+        .sub-links-container {
+            display: none; /* Hidden by default */
+            flex-direction: row; /* Horizontal split */
+            background: var(--royal-blue-dark);
         }
-        
-        .button:active {
-            transform: translateY(2px);
-        }
-        
-        .button::after {
-            content: '→';
-            position: absolute;
-            right: 28px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.6rem;
-            opacity: 0.85;
-            transition: all 0.3s;
-        }
-        
-        .button:hover::after {
-            transform: translateY(-50%) translateX(6px);
-        }
-        
-        footer {
-            margin-top: 50px;
+
+        .sub-link {
+            flex: 1;
+            font-size: 1rem;
+            padding: 15px 10px;
             text-align: center;
-            opacity: 0.8;
-            font-size: 0.95rem;
+            border-right: 1px solid rgba(255,255,255,0.1);
         }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2.8rem;
-            }
-            .button {
-                padding: 20px 24px;
-                font-size: 1.25rem;
-            }
-        }
+
+        .sub-link:last-child { border-right: none; }
+
+        /* Toggle State */
+        .button-wrapper.active .main-btn { display: none; }
+        .button-wrapper.active .sub-links-container { display: flex; }
+
+        /* Indicator for multi-links */
+        .has-sub::after { content: ' ▾'; opacity: 0.6; }
+
+        .loading { text-align: center; padding: 40px; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -141,13 +106,8 @@
     </header>
     
     <div class="container">
-        <div id="buttons-container" class="buttons-container">
-            <!-- Buttons will be dynamically added here -->
-        </div>
-        
-        <div id="loading" class="loading">
-            Loading directories...
-        </div>
+        <div id="buttons-container" class="buttons-container"></div>
+        <div id="loading" class="loading">Loading directories...</div>
     </div>
 
     <script>
@@ -157,38 +117,52 @@
             
             try {
                 const response = await fetch('directories.json');
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load directories.json');
-                }
-                
                 const directories = await response.json();
                 
                 loading.style.display = 'none';
                 container.innerHTML = '';
                 
-                if (!Array.isArray(directories) || directories.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; padding:40px; opacity:0.8;">No links found. Add entries to directories.json</p>';
-                    return;
-                }
-                
-                directories.forEach(([title, url]) => {
-                    if (typeof title === 'string' && typeof url === 'string') {
-                        const button = document.createElement('a');
-                        button.href = url;
-                        button.target = '_blank';
-                        button.rel = 'noopener noreferrer';
-                        button.className = 'button';
-                        button.textContent = title;
-                        container.appendChild(button);
+                directories.forEach(([title, data]) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'button-wrapper';
+
+                    if (typeof data === 'string') {
+                        // Regular Single Link
+                        const link = document.createElement('a');
+                        link.href = data;
+                        link.className = 'main-btn';
+                        link.textContent = title;
+                        link.target = '_blank';
+                        wrapper.appendChild(link);
+                    } else {
+                        // Multi-Link Logic
+                        const mainBtn = document.createElement('button');
+                        mainBtn.className = 'main-btn has-sub';
+                        mainBtn.textContent = title;
+                        
+                        const subContainer = document.createElement('div');
+                        subContainer.className = 'sub-links-container';
+
+                        // Create sub-buttons from the object
+                        Object.entries(data).forEach(([subTitle, url]) => {
+                            const subLink = document.createElement('a');
+                            subLink.href = url;
+                            subLink.className = 'sub-link';
+                            subLink.textContent = subTitle;
+                            subLink.target = '_blank';
+                            subContainer.appendChild(subLink);
+                        });
+
+                        mainBtn.onclick = () => wrapper.classList.add('active');
+                        
+                        wrapper.appendChild(mainBtn);
+                        wrapper.appendChild(subContainer);
                     }
+                    
+                    container.appendChild(wrapper);
                 });
             } catch (error) {
-                console.error('Error:', error);
-                loading.innerHTML = `
-                    <strong>Error loading directories.json</strong><br><br>
-                    Make sure the file is in the same folder as index.html
-                `;
+                loading.innerHTML = `<strong>Error loading configuration.</strong>`;
             }
         }
         
