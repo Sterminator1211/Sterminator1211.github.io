@@ -167,7 +167,6 @@
         let capturedWhite = [];
         let capturedBlack = [];
 
-        // Castling rights
         let castlingRights = {
             whiteKingSide: true,
             whiteQueenSide: true,
@@ -175,15 +174,14 @@
             blackQueenSide: true
         };
 
-        let kingPositions = { white: [7,4], black: [0,4] };
+        let kingPositions = { white: [7, 4], black: [0, 4] };
 
         const files = 'abcdefgh';
 
         function getPieceImage(piece) {
             const color = piece === piece.toUpperCase() ? 'White' : 'Black';
             const nameMap = { 'p':'pawn', 'r':'rook', 'n':'knight', 'b':'bishop', 'q':'queen', 'k':'king' };
-            const name = nameMap[piece.toLowerCase()];
-            return `data/Pieces-${color}/${name}.png`;
+            return `data/Pieces-${color}/${nameMap[piece.toLowerCase()]}.png`;
         }
 
         function createBoard() {
@@ -255,7 +253,9 @@
         }
 
         function clearHighlights() {
-            document.querySelectorAll('.square').forEach(s => s.classList.remove('highlight','selected','possible','capture'));
+            document.querySelectorAll('.square').forEach(s => 
+                s.classList.remove('highlight', 'selected', 'possible', 'capture')
+            );
         }
 
         function showPossibleMoves(row, col) {
@@ -275,13 +275,14 @@
             return (p1 === p1.toUpperCase()) === (p2 === p2.toUpperCase());
         }
 
+        // ====================== MOVE VALIDATION ======================
         function isValidMove(fr, fc, tr, tc) {
             if (fr === tr && fc === tc) return false;
             const piece = board[fr][fc];
             if (!piece) return false;
             if (board[tr][tc] && isSameColor(piece, board[tr][tc])) return false;
 
-            // Special castling
+            // Castling
             if (piece.toLowerCase() === 'k' && Math.abs(fc - tc) === 2) {
                 return isValidCastling(fr, fc, tr, tc);
             }
@@ -299,8 +300,6 @@
             }
 
             if (!valid) return false;
-
-            // Simulate move and check if king is safe
             return !wouldBeInCheckAfterMove(fr, fc, tr, tc);
         }
 
@@ -318,124 +317,86 @@
             }
 
             const rookCol = isKingSide ? 7 : 0;
-            const rook = board[kingRow][rookCol];
-            if (!rook || rook.toLowerCase() !== 'r') return false;
+            if (board[kingRow][rookCol]?.toLowerCase() !== 'r') return false;
 
-            // Check path is clear
             const step = isKingSide ? 1 : -1;
             for (let c = kingCol + step; c !== rookCol; c += step) {
                 if (board[kingRow][c]) return false;
             }
 
-            // King cannot be in check or pass through check
             if (isKingInCheck(isWhite ? 'white' : 'black')) return false;
             if (wouldBeInCheckAfterMove(kingRow, kingCol, kingRow, kingCol + step)) return false;
 
             return true;
         }
 
-        function makeMove(fr, fc, tr, tc) {
-            const piece = board[fr][fc];
-            const captured = board[tr][tc];
-            const isWhite = piece === piece.toUpperCase();
-
-            // Handle castling
-            if (piece.toLowerCase() === 'k' && Math.abs(fc - tc) === 2) {
-                const isKingSide = tc > fc;
-                const rookFrom = isKingSide ? 7 : 0;
-                const rookTo = isKingSide ? tc - 1 : tc + 1;
-                
-                board[tr][rookTo] = board[tr][rookFrom];
-                board[tr][rookFrom] = null;
+        function validatePawn(fr, fc, tr, tc, isWhite) {
+            const dir = isWhite ? -1 : 1;
+            const start = isWhite ? 6 : 1;
+            if (fc === tc) {
+                if (tr === fr + dir && !board[tr][tc]) return true;
+                if (fr === start && tr === fr + 2*dir && !board[tr][tc] && !board[fr+dir][tc]) return true;
             }
-
-            // Update king position
-            if (piece.toLowerCase() === 'k') {
-                kingPositions[isWhite ? 'white' : 'black'] = [tr, tc];
-            }
-
-            // Update castling rights
-            if (piece.toLowerCase() === 'k') {
-                if (isWhite) {
-                    castlingRights.whiteKingSide = false;
-                    castlingRights.whiteQueenSide = false;
-                } else {
-                    castlingRights.blackKingSide = false;
-                    castlingRights.blackQueenSide = false;
-                }
-            }
-            if (piece.toLowerCase() === 'r') {
-                if (fr === 7 && fc === 0) castlingRights.whiteQueenSide = false;
-                if (fr === 7 && fc === 7) castlingRights.whiteKingSide = false;
-                if (fr === 0 && fc === 0) castlingRights.blackQueenSide = false;
-                if (fr === 0 && fc === 7) castlingRights.blackKingSide = false;
-            }
-
-            // Capture
-            if (captured) {
-                if (isWhite) capturedBlack.push(captured);
-                else capturedWhite.push(captured);
-                updateCaptured();
-            }
-
-            board[tr][tc] = piece;
-            board[fr][fc] = null;
-
-            // Pawn promotion
-            if (piece === 'P' && tr === 0) board[tr][tc] = 'Q';
-            if (piece === 'p' && tr === 7) board[tr][tc] = 'q';
-
-            const notation = getMoveNotation(fr, fc, tr, tc, piece, captured);
-            moveHistory.push(notation);
-            updateMoveHistory();
-
-            createBoard();
-
-            currentTurn = currentTurn === 'white' ? 'black' : 'white';
-            
-            const statusEl = document.getElementById('status');
-            if (isCheckmate(currentTurn)) {
-                statusEl.textContent = `${currentTurn === 'white' ? 'Black' : 'White'} wins by checkmate!`;
-                statusEl.style.color = '#ff4444';
-            } else if (isKingInCheck(currentTurn)) {
-                statusEl.textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)} is in check!`;
-            } else {
-                statusEl.textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)}'s turn`;
-                statusEl.style.color = '';
-            }
-
-            selectedPiece = null;
-            clearHighlights();
+            if (Math.abs(fc - tc) === 1 && tr === fr + dir && board[tr][tc]) return true;
+            return false;
         }
 
-        // ... (All validation functions remain the same as previous version - validatePawn, Rook, etc.)
+        function validateRook(fr, fc, tr, tc) {
+            if (fr !== tr && fc !== tc) return false;
+            return isPathClear(fr, fc, tr, tc);
+        }
+
+        function validateKnight(fr, fc, tr, tc) {
+            const rd = Math.abs(fr - tr);
+            const cd = Math.abs(fc - tc);
+            return (rd === 2 && cd === 1) || (rd === 1 && cd === 2);
+        }
+
+        function validateBishop(fr, fc, tr, tc) {
+            if (Math.abs(fr - tr) !== Math.abs(fc - tc)) return false;
+            return isPathClear(fr, fc, tr, tc);
+        }
+
+        function validateQueen(fr, fc, tr, tc) {
+            return validateRook(fr, fc, tr, tc) || validateBishop(fr, fc, tr, tc);
+        }
+
+        function validateKing(fr, fc, tr, tc) {
+            return Math.abs(fr - tr) <= 1 && Math.abs(fc - tc) <= 1;
+        }
+
+        function isPathClear(fr, fc, tr, tc) {
+            const rs = Math.sign(tr - fr);
+            const cs = Math.sign(tc - fc);
+            let r = fr + rs, c = fc + cs;
+            while (r !== tr || c !== tc) {
+                if (board[r][c]) return false;
+                r += rs; c += cs;
+            }
+            return true;
+        }
 
         function wouldBeInCheckAfterMove(fr, fc, tr, tc) {
-            const backupPiece = board[tr][tc];
-            const movingPiece = board[fr][fc];
+            const backup = board[tr][tc];
+            const moving = board[fr][fc];
             
-            board[tr][tc] = movingPiece;
+            board[tr][tc] = moving;
             board[fr][fc] = null;
             
-            const inCheck = isKingInCheck(movingPiece === movingPiece.toUpperCase() ? 'white' : 'black');
+            const inCheck = isKingInCheck(moving === moving.toUpperCase() ? 'white' : 'black');
             
-            board[fr][fc] = movingPiece;
-            board[tr][tc] = backupPiece;
-            
+            board[fr][fc] = moving;
+            board[tr][tc] = backup;
             return inCheck;
         }
 
         function isKingInCheck(color) {
             const kingPos = kingPositions[color];
-            const opponentColor = color === 'white' ? 'black' : 'white';
-            
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const piece = board[r][c];
                     if (piece && (piece === piece.toUpperCase()) !== (color === 'white')) {
-                        if (isValidAttack(r, c, kingPos[0], kingPos[1])) {
-                            return true;
-                        }
+                        if (isValidAttack(r, c, kingPos[0], kingPos[1])) return true;
                     }
                 }
             }
@@ -443,8 +404,8 @@
         }
 
         function isValidAttack(fr, fc, tr, tc) {
-            const piece = board[fr][fc].toLowerCase();
-            switch (piece) {
+            const type = board[fr][fc].toLowerCase();
+            switch (type) {
                 case 'p': return validatePawnAttack(fr, fc, tr, tc, board[fr][fc] === 'P');
                 case 'r': return validateRook(fr, fc, tr, tc);
                 case 'n': return validateKnight(fr, fc, tr, tc);
@@ -469,9 +430,7 @@
                     if (piece && (piece === piece.toUpperCase()) === (color === 'white')) {
                         for (let tr = 0; tr < 8; tr++) {
                             for (let tc = 0; tc < 8; tc++) {
-                                if (isValidMove(r, c, tr, tc)) {
-                                    return false;
-                                }
+                                if (isValidMove(r, c, tr, tc)) return false;
                             }
                         }
                     }
@@ -480,11 +439,111 @@
             return true;
         }
 
-        // Keep the rest of your previous functions (validatePawn, Rook, etc., updateCaptured, etc.)
-        // For brevity, I'm assuming you still have them from the last version.
+        function makeMove(fr, fc, tr, tc) {
+            const piece = board[fr][fc];
+            const captured = board[tr][tc];
+            const isWhite = piece === piece.toUpperCase();
+
+            // Castling move
+            if (piece.toLowerCase() === 'k' && Math.abs(fc - tc) === 2) {
+                const isKingSide = tc > fc;
+                const rookFrom = isKingSide ? 7 : 0;
+                const rookTo = isKingSide ? tc - 1 : tc + 1;
+                board[tr][rookTo] = board[tr][rookFrom];
+                board[tr][rookFrom] = null;
+            }
+
+            // Update king position
+            if (piece.toLowerCase() === 'k') {
+                kingPositions[isWhite ? 'white' : 'black'] = [tr, tc];
+            }
+
+            // Update castling rights
+            if (piece.toLowerCase() === 'k') {
+                if (isWhite) castlingRights.whiteKingSide = castlingRights.whiteQueenSide = false;
+                else castlingRights.blackKingSide = castlingRights.blackQueenSide = false;
+            }
+            if (piece.toLowerCase() === 'r') {
+                if (fr === 7 && fc === 0) castlingRights.whiteQueenSide = false;
+                if (fr === 7 && fc === 7) castlingRights.whiteKingSide = false;
+                if (fr === 0 && fc === 0) castlingRights.blackQueenSide = false;
+                if (fr === 0 && fc === 7) castlingRights.blackKingSide = false;
+            }
+
+            if (captured) {
+                if (isWhite) capturedBlack.push(captured);
+                else capturedWhite.push(captured);
+                updateCaptured();
+            }
+
+            board[tr][tc] = piece;
+            board[fr][fc] = null;
+
+            // Pawn promotion
+            if (piece === 'P' && tr === 0) board[tr][tc] = 'Q';
+            if (piece === 'p' && tr === 7) board[tr][tc] = 'q';
+
+            moveHistory.push(getMoveNotation(fr, fc, tr, tc, piece, captured));
+            updateMoveHistory();
+
+            createBoard();
+
+            currentTurn = currentTurn === 'white' ? 'black' : 'white';
+            const statusEl = document.getElementById('status');
+
+            if (isCheckmate(currentTurn)) {
+                statusEl.textContent = `${currentTurn === 'white' ? 'Black' : 'White'} wins by checkmate!`;
+                statusEl.style.color = '#ff4444';
+            } else if (isKingInCheck(currentTurn)) {
+                statusEl.textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)} is in check!`;
+            } else {
+                statusEl.textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)}'s turn`;
+                statusEl.style.color = '';
+            }
+
+            selectedPiece = null;
+            clearHighlights();
+        }
+
+        function getMoveNotation(fr, fc, tr, tc, piece, captured) {
+            const fromFile = files[fc];
+            const toFile = files[tc];
+            const toRank = 8 - tr;
+            let n = '';
+            if (piece.toLowerCase() !== 'p') n += piece.toUpperCase();
+            if (captured) n += 'x';
+            n += toFile + toRank;
+            return n;
+        }
+
+        function updateMoveHistory() {
+            const el = document.getElementById('move-history');
+            let html = '';
+            for (let i = 0; i < moveHistory.length; i += 2) {
+                html += `<div>${Math.floor(i/2)+1}. ${moveHistory[i] || ''} ${moveHistory[i+1] || ''}</div>`;
+            }
+            el.innerHTML = html;
+        }
+
+        function updateCaptured() {
+            const whiteEl = document.getElementById('captured-white');
+            const blackEl = document.getElementById('captured-black');
+            
+            whiteEl.innerHTML = capturedWhite.map(p => `<img src="${getPieceImage(p)}">`).join('');
+            blackEl.innerHTML = capturedBlack.map(p => `<img src="${getPieceImage(p)}">`).join('');
+        }
 
         function resetGame() {
-            board = [ /* same initial board */ ];
+            board = [
+                ['r','n','b','q','k','b','n','r'],
+                ['p','p','p','p','p','p','p','p'],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                ['P','P','P','P','P','P','P','P'],
+                ['R','N','B','Q','K','B','N','R']
+            ];
             currentTurn = 'white';
             selectedPiece = null;
             moveHistory = [];
