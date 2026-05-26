@@ -1,0 +1,7 @@
+{
+  "name": "novaos",
+  "version": "1.4.0",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
