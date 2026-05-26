@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Most Not Not Horrible Chess</title>
     <style>
-        /* (Your existing CSS - unchanged) */
         body {
             font-family: 'Segoe UI', sans-serif;
             background: #1e1e1e;
@@ -130,7 +129,7 @@
         <div id="board"></div>
         
         <div class="info">
-            <div id="status" class="status">White's turn</div>
+            <div id="status" class="status">White's turn (Black is AI)</div>
             
             <div>
                 <strong>Move History</strong>
@@ -211,8 +210,6 @@
             }
         }
 
-        // ==================== AI FUNCTIONS ====================
-
         function getAllValidMoves(color) {
             let moves = [];
             const isWhite = color === 'white';
@@ -221,12 +218,18 @@
                 for (let fc = 0; fc < 8; fc++) {
                     const piece = board[fr][fc];
                     if (!piece) continue;
+                    
                     const pieceIsWhite = piece === piece.toUpperCase();
                     if (pieceIsWhite !== isWhite) continue;
                     
                     for (let tr = 0; tr < 8; tr++) {
                         for (let tc = 0; tc < 8; tc++) {
                             if (isValidMove(fr, fc, tr, tc)) {
+                                const target = board[tr][tc];
+                                // Strict check: cannot capture own pieces
+                                if (target && (target === target.toUpperCase()) === pieceIsWhite) {
+                                    continue;
+                                }
                                 moves.push({fr, fc, tr, tc});
                             }
                         }
@@ -252,8 +255,6 @@
             
             makeMove(move.fr, move.fc, move.tr, move.tc);
         }
-
-        // ==================== EXISTING FUNCTIONS ====================
 
         function handleSquareClick(e) {
             if (gameOver || currentTurn === 'black') return;
@@ -321,7 +322,6 @@
             return (p1 === p1.toUpperCase()) === (p2 === p2.toUpperCase());
         }
 
-        // (All your validation functions remain unchanged: isValidMove, isValidCastling, validatePawn, etc.)
         function isValidMove(fr, fc, tr, tc) {
             if (fr === tr && fc === tc) return false;
             const piece = board[fr][fc];
@@ -454,7 +454,7 @@
             updateMoveHistory();
             createBoard();
 
-            // Check if king was captured
+            // Check kings
             const whiteKingExists = board.flat().includes('K');
             const blackKingExists = board.flat().includes('k');
 
@@ -475,7 +475,6 @@
             selectedPiece = null;
             clearHighlights();
 
-            // Trigger AI if it's Black's turn
             if (currentTurn === 'black' && !gameOver) {
                 setTimeout(makeRandomAIMove, 350);
             }
