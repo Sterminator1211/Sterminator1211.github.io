@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auxetic Chess</title>
+    <title>Auxetic Chess - 2 Player</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -31,33 +31,82 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
         .square {
-            width: 48px; height: 48px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; user-select: none; position: relative;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
         }
         .light { background: #f0d9b5; }
         .dark { background: #b58863; }
         .highlight { box-shadow: inset 0 0 0 4px rgba(255, 255, 0, 0.7); }
         .selected { box-shadow: inset 0 0 0 4px #00ff00; }
-        .possible::after { content: ''; position: absolute; width: 16px; height: 16px; background: rgba(0,255,0,0.45); border-radius: 50%; }
-        .capture::after { content: ''; position: absolute; width: 40px; height: 40px; border: 3px solid rgba(255,0,0,0.7); border-radius: 50%; }
-
-        .square img { width: 38px; height: 38px; pointer-events: none; }
-
-        .info { background: #2a2a2a; padding: 20px; border-radius: 10px; width: 280px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
-        button { padding: 10px 20px; margin: 5px 0; width: 100%; background: #4a2c0f; color: #eee; border: none; border-radius: 5px; cursor: pointer; }
+        .possible::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: rgba(0, 255, 0, 0.45);
+            border-radius: 50%;
+        }
+        .capture::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 0, 0, 0.7);
+            border-radius: 50%;
+        }
+        .square img {
+            width: 38px;
+            height: 38px;
+            pointer-events: none;
+        }
+        .info {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            width: 280px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        .status {
+            font-size: 1.35em;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px 0;
+            width: 100%;
+            background: #4a2c0f;
+            color: #eee;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
         .clap-btn { background: #b58863; font-weight: bold; }
+        .move-history {
+            max-height: 260px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
-    <h1>♟️ Auxetic Chess ♟️</h1>
+    <h1>♟️ Auxetic Chess - 2 Player ♟️</h1>
     <div class="game-container">
         <div id="board"></div>
         
         <div class="info">
             <div id="status" class="status">White's turn</div>
-            <button onclick="makeClap()">Clap the Board (Auxetic Shift)</button>
-            <button onclick="skipClap()">Keep Current Position</button>
+            
+            <button onclick="makeClap()" class="clap-btn">Clap the Board (Rotate 2×2 tiles)</button>
+            <button onclick="skipClap()">Skip Clap - End Turn</button>
             <button onclick="resetGame()">New Game</button>
             
             <div style="margin-top: 20px;">
@@ -83,7 +132,14 @@
         let selectedPiece = null;
         let moveHistory = [];
         let gameOver = false;
-        let hasMoved = false; // Track if normal move was made this turn
+        let awaitingClap = false;
+
+        let castlingRights = {
+            whiteKingSide: true,
+            whiteQueenSide: true,
+            blackKingSide: true,
+            blackQueenSide: true
+        };
 
         const files = 'abcdefgh';
 
@@ -115,49 +171,287 @@
         }
 
         function handleSquareClick(e) {
-            if (gameOver || currentTurn === 'black') return; // For now single player vs random AI or hotseat
+            if (gameOver || awaitingClap) return;
 
-            // ... (same click logic as previous chess versions - omitted for brevity, copy from earlier full version if needed)
-            // For a quick playable version, you can expand it with previous code
+            const row = parseInt(e.currentTarget.dataset.row);
+            const col = parseInt(e.currentTarget.dataset.col);
+            const piece = board[row][col];
+
+            if (selectedPiece) {
+                const [fr, fc] = selectedPiece;
+                if (fr === row && fc === col) {
+                    clearHighlights();
+                    selectedPiece = null;
+                    return;
+                }
+
+                if (isValidMove(fr, fc, row, col)) {
+                    makeMove(fr, fc, row, col);
+                } else if (piece && isSameColor(board[fr][fc], piece)) {
+                    clearHighlights();
+                    selectPiece(row, col);
+                } else {
+                    clearHighlights();
+                    selectedPiece = null;
+                }
+            } else if (piece) {
+                const isWhitePiece = piece === piece.toUpperCase();
+                if ((currentTurn === 'white' && isWhitePiece) || (currentTurn === 'black' && !isWhitePiece)) {
+                    selectPiece(row, col);
+                }
+            }
         }
 
-        // Auxetic Clap Transformation (approximating quadrant rotations)
+        function selectPiece(row, col) {
+            selectedPiece = [row, col];
+            clearHighlights();
+            getSquareElement(row, col).classList.add('selected');
+            showPossibleMoves(row, col);
+        }
+
+        function getSquareElement(row, col) {
+            return document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.square').forEach(s => 
+                s.classList.remove('highlight', 'selected', 'possible', 'capture')
+            );
+        }
+
+        function showPossibleMoves(row, col) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (isValidMove(row, col, r, c)) {
+                        const sq = getSquareElement(r, c);
+                        sq.classList.add('highlight');
+                        if (board[r][c]) sq.classList.add('capture');
+                        else sq.classList.add('possible');
+                    }
+                }
+            }
+        }
+
+        function isSameColor(p1, p2) {
+            return (p1 === p1.toUpperCase()) === (p2 === p2.toUpperCase());
+        }
+
+        function isValidMove(fr, fc, tr, tc) {
+            if (fr === tr && fc === tc) return false;
+            const piece = board[fr][fc];
+            if (!piece) return false;
+            if (board[tr][tc] && isSameColor(piece, board[tr][tc])) return false;
+
+            if (piece.toLowerCase() === 'k' && Math.abs(fc - tc) === 2) {
+                return isValidCastling(fr, fc, tr, tc);
+            }
+
+            const type = piece.toLowerCase();
+            switch (type) {
+                case 'p': return validatePawn(fr, fc, tr, tc, piece === 'P');
+                case 'r': return validateRook(fr, fc, tr, tc);
+                case 'n': return validateKnight(fr, fc, tr, tc);
+                case 'b': return validateBishop(fr, fc, tr, tc);
+                case 'q': return validateQueen(fr, fc, tr, tc);
+                case 'k': return validateKing(fr, fc, tr, tc);
+                default: return false;
+            }
+        }
+
+        function isValidCastling(kingRow, kingCol, targetRow, targetCol) {
+            if (kingRow !== targetRow) return false;
+            const isWhite = kingRow === 7;
+            const isKingSide = targetCol > kingCol;
+
+            if (isWhite) {
+                if (isKingSide && !castlingRights.whiteKingSide) return false;
+                if (!isKingSide && !castlingRights.whiteQueenSide) return false;
+            } else {
+                if (isKingSide && !castlingRights.blackKingSide) return false;
+                if (!isKingSide && !castlingRights.blackQueenSide) return false;
+            }
+
+            const rookCol = isKingSide ? 7 : 0;
+            if (board[kingRow][rookCol]?.toLowerCase() !== 'r') return false;
+
+            const step = isKingSide ? 1 : -1;
+            for (let c = kingCol + step; c !== rookCol; c += step) {
+                if (board[kingRow][c]) return false;
+            }
+            return true;
+        }
+
+        function validatePawn(fr, fc, tr, tc, isWhite) {
+            const dir = isWhite ? -1 : 1;
+            const start = isWhite ? 6 : 1;
+            if (fc === tc) {
+                if (tr === fr + dir && !board[tr][tc]) return true;
+                if (fr === start && tr === fr + 2*dir && !board[tr][tc] && !board[fr+dir][tc]) return true;
+            }
+            if (Math.abs(fc - tc) === 1 && tr === fr + dir && board[tr][tc]) return true;
+            return false;
+        }
+
+        function validateRook(fr, fc, tr, tc) {
+            if (fr !== tr && fc !== tc) return false;
+            return isPathClear(fr, fc, tr, tc);
+        }
+
+        function validateKnight(fr, fc, tr, tc) {
+            const rd = Math.abs(fr - tr), cd = Math.abs(fc - tc);
+            return (rd === 2 && cd === 1) || (rd === 1 && cd === 2);
+        }
+
+        function validateBishop(fr, fc, tr, tc) {
+            if (Math.abs(fr - tr) !== Math.abs(fc - tc)) return false;
+            return isPathClear(fr, fc, tr, tc);
+        }
+
+        function validateQueen(fr, fc, tr, tc) {
+            return validateRook(fr, fc, tr, tc) || validateBishop(fr, fc, tr, tc);
+        }
+
+        function validateKing(fr, fc, tr, tc) {
+            return Math.abs(fr - tr) <= 1 && Math.abs(fc - tc) <= 1;
+        }
+
+        function isPathClear(fr, fc, tr, tc) {
+            const rs = Math.sign(tr - fr), cs = Math.sign(tc - fc);
+            let r = fr + rs, c = fc + cs;
+            while (r !== tr || c !== tc) {
+                if (board[r][c]) return false;
+                r += rs; c += cs;
+            }
+            return true;
+        }
+
+        function makeMove(fr, fc, tr, tc) {
+            const piece = board[fr][fc];
+            const captured = board[tr][tc];
+            const isWhite = piece === piece.toUpperCase();
+
+            // Castling
+            if (piece.toLowerCase() === 'k' && Math.abs(fc - tc) === 2) {
+                const isKingSide = tc > fc;
+                const rookFrom = isKingSide ? 7 : 0;
+                const rookTo = isKingSide ? tc - 1 : tc + 1;
+                board[tr][rookTo] = board[tr][rookFrom];
+                board[tr][rookFrom] = null;
+            }
+
+            // Update castling rights
+            if (piece.toLowerCase() === 'k') {
+                if (isWhite) castlingRights.whiteKingSide = castlingRights.whiteQueenSide = false;
+                else castlingRights.blackKingSide = castlingRights.blackQueenSide = false;
+            }
+            if (piece.toLowerCase() === 'r') {
+                if (fr === 7 && fc === 0) castlingRights.whiteQueenSide = false;
+                if (fr === 7 && fc === 7) castlingRights.whiteKingSide = false;
+                if (fr === 0 && fc === 0) castlingRights.blackQueenSide = false;
+                if (fr === 0 && fc === 7) castlingRights.blackKingSide = false;
+            }
+
+            board[tr][tc] = piece;
+            board[fr][fc] = null;
+
+            // Promotion
+            if (piece === 'P' && tr === 0) board[tr][tc] = 'Q';
+            if (piece === 'p' && tr === 7) board[tr][tc] = 'q';
+
+            moveHistory.push(getMoveNotation(fr, fc, tr, tc, piece, captured));
+            updateMoveHistory();
+            createBoard();
+
+            // Check for king capture
+            if (!board.flat().includes('K')) {
+                gameOver = true;
+                document.getElementById('status').innerHTML = '🎉 Black wins!';
+                return;
+            }
+            if (!board.flat().includes('k')) {
+                gameOver = true;
+                document.getElementById('status').innerHTML = '🎉 White wins!';
+                return;
+            }
+
+            awaitingClap = true;
+            document.getElementById('status').textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)} - Clap or Skip?`;
+        }
+
+        function getMoveNotation(fr, fc, tr, tc, piece, captured) {
+            const toFile = files[tc];
+            const toRank = 8 - tr;
+            let n = '';
+            if (piece.toLowerCase() !== 'p') n += piece.toUpperCase();
+            if (captured) n += 'x';
+            n += toFile + toRank;
+            return n;
+        }
+
+        function updateMoveHistory() {
+            const el = document.getElementById('move-history');
+            let html = '';
+            for (let i = 0; i < moveHistory.length; i += 2) {
+                html += `<div>${Math.floor(i/2)+1}. ${moveHistory[i] || ''} ${moveHistory[i+1] || ''}</div>`;
+            }
+            el.innerHTML = html;
+        }
+
+        // Auxetic Clap: Rotate every 2x2 quadrant 90° clockwise
         function makeClap() {
-            if (gameOver) return;
-            
-            const newBoard = Array(8).fill().map(() => Array(8).fill(null));
-            
-            // Simple model of auxetic shift: rotate 4x4 quadrants (common way these boards work)
-            for (let qy = 0; qy < 2; qy++) {
-                for (let qx = 0; qx < 2; qx++) {
-                    // Rotate each 4x4 quadrant 90 degrees (clockwise)
-                    for (let i = 0; i < 4; i++) {
-                        for (let j = 0; j < 4; j++) {
-                            const oldRow = qy*4 + i;
-                            const oldCol = qx*4 + j;
-                            const newRow = qy*4 + j;
-                            const newCol = qx*4 + (3 - i); // 90 deg clockwise
-                            newBoard[newRow][newCol] = board[oldRow][oldCol];
+            if (!awaitingClap || gameOver) return;
+
+            const newBoard = Array.from({length: 8}, () => Array(8).fill(null));
+
+            for (let qy = 0; qy < 4; qy++) {
+                for (let qx = 0; qx < 4; qx++) {
+                    for (let i = 0; i < 2; i++) {
+                        for (let j = 0; j < 2; j++) {
+                            const oldR = qy * 2 + i;
+                            const oldC = qx * 2 + j;
+                            const newR = qy * 2 + j;
+                            const newC = qx * 2 + (1 - i);
+                            newBoard[newR][newC] = board[oldR][oldC];
                         }
                     }
                 }
             }
-            
+
             board = newBoard;
             createBoard();
-            document.getElementById('status').textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)}'s turn (after clap)`;
+            endTurn();
         }
 
         function skipClap() {
-            // End turn without clapping
+            if (!awaitingClap || gameOver) return;
+            endTurn();
+        }
+
+        function endTurn() {
+            awaitingClap = false;
             currentTurn = currentTurn === 'white' ? 'black' : 'white';
             document.getElementById('status').textContent = `${currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1)}'s turn`;
-            hasMoved = false;
         }
 
         function resetGame() {
-            board = [ /* standard starting position */ ];
-            // reset all variables
+            board = [
+                ['r','n','b','q','k','b','n','r'],
+                ['p','p','p','p','p','p','p','p'],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                ['P','P','P','P','P','P','P','P'],
+                ['R','N','B','Q','K','B','N','R']
+            ];
+            currentTurn = 'white';
+            selectedPiece = null;
+            moveHistory = [];
+            gameOver = false;
+            awaitingClap = false;
+            castlingRights = { whiteKingSide: true, whiteQueenSide: true, blackKingSide: true, blackQueenSide: true };
+            document.getElementById('status').textContent = "White's turn";
+            document.getElementById('move-history').innerHTML = '';
             createBoard();
         }
 
