@@ -7,15 +7,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@400;500;700&display=swap');
         
-        :root { 
-            --netflix-red: #e50914; 
-        }
+        :root { --netflix-red: #e50914; }
         
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Netflix Sans', Arial, sans-serif;
@@ -67,7 +61,6 @@
             font-size: 1rem;
         }
 
-        /* Main container */
         .main-content {
             padding-top: 140px;
             padding-bottom: 80px;
@@ -80,36 +73,17 @@
             padding: 0 20px;
         }
 
-        /* Plans Page */
-        .plans-header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
+        /* Plans styling (same as before) */
+        .plans-header h1 { font-size: 2.8rem; margin-bottom: 12px; text-align: center; }
         
-        .plans-header h1 {
-            font-size: 2.8rem;
-            margin-bottom: 12px;
-        }
-        
-        .plans-section {
-            margin-bottom: 60px;
-        }
-        
-        .plans-section h2 {
-            text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 30px;
-            color: #b3b3b3;
-        }
+        .plans-section { margin-bottom: 60px; }
+        .plans-section h2 { text-align: center; font-size: 1.8rem; margin-bottom: 30px; color: #b3b3b3; }
         
         .plans {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
             justify-content: center;
-            padding: 0 20px;
-            max-width: 1600px;
-            margin: 0 auto;
         }
         
         .separator-bar {
@@ -135,55 +109,16 @@
             box-shadow: 0 10px 30px rgba(229, 9, 20, 0.3);
         }
         
-        .plan-header {
-            padding: 32px 28px 20px;
-            text-align: center;
-        }
+        .plan-header { padding: 32px 28px 20px; text-align: center; }
+        .plan-name { font-size: 1.85rem; font-weight: 700; margin-bottom: 8px; }
+        .plan-res { font-size: 1.15rem; color: #b3b3b3; margin-bottom: 28px; }
         
-        .plan-name {
-            font-size: 1.85rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
+        .plan-features { padding: 0 28px 32px; flex-grow: 1; }
+        .feature { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; font-size: 1.02rem; }
+        .feature::before { content: '✓'; color: #46d369; font-weight: bold; font-size: 1.3rem; flex-shrink: 0; margin-top: -4px; }
         
-        .plan-res {
-            font-size: 1.15rem;
-            color: #b3b3b3;
-            margin-bottom: 28px;
-        }
-        
-        .plan-features {
-            padding: 0 28px 32px;
-            flex-grow: 1;
-        }
-        
-        .feature {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            margin-bottom: 16px;
-            font-size: 1.02rem;
-        }
-        
-        .feature::before {
-            content: '✓';
-            color: #46d369;
-            font-weight: bold;
-            font-size: 1.3rem;
-            flex-shrink: 0;
-            margin-top: -4px;
-        }
-        
-        .plan-price {
-            padding: 24px 28px;
-            text-align: center;
-            border-top: 1px solid #333;
-        }
-        
-        .price {
-            font-size: 2.1rem;
-            font-weight: 700;
-        }
+        .plan-price { padding: 24px 28px; text-align: center; border-top: 1px solid #333; }
+        .price { font-size: 2.1rem; font-weight: 700; }
         
         .choose-btn {
             display: block;
@@ -198,28 +133,17 @@
             font-weight: 600;
             cursor: pointer;
         }
-        
-        .choose-btn:hover { 
-            background: #f40612; 
-        }
+        .choose-btn:hover { background: #f40612; }
 
-        /* Phone Entry Page */
+        /* Phone Page */
         .phone-page {
             max-width: 520px;
             margin: 0 auto;
             text-align: center;
         }
 
-        .phone-page h1 {
-            font-size: 2.4rem;
-            margin-bottom: 12px;
-        }
-
-        .phone-page p {
-            color: #b3b3b3;
-            margin-bottom: 40px;
-            font-size: 1.1rem;
-        }
+        .phone-page h1 { font-size: 2.4rem; margin-bottom: 12px; }
+        .phone-page p { color: #b3b3b3; margin-bottom: 40px; font-size: 1.1rem; }
 
         .phone-display {
             background: #222;
@@ -256,34 +180,8 @@
             transition: all 0.2s;
         }
 
-        .key-btn:hover {
-            background: #555;
-            transform: scale(1.05);
-        }
-
-        .key-btn:active {
-            background: #e50914;
-        }
-
-        .keypad-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .action-btn {
-            background: #444;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 18px;
-            font-size: 1.1rem;
-            cursor: pointer;
-        }
-
-        .action-btn:hover {
-            background: #666;
-        }
+        .key-btn:hover { background: #555; transform: scale(1.05); }
+        .key-btn:active { background: #e50914; }
 
         .selected-plan-info {
             background: #1f1f1f;
@@ -291,11 +189,6 @@
             padding: 20px;
             margin: 40px 0;
             text-align: left;
-        }
-
-        .selected-plan-info h3 {
-            color: #e50914;
-            margin-bottom: 8px;
         }
 
         .nav-buttons {
@@ -336,15 +229,11 @@
             margin-top: 80px;
             font-size: 0.95rem;
             color: #b3b3b3;
-            max-width: 860px;
-            margin-left: auto;
-            margin-right: auto;
             line-height: 1.6;
         }
 
         @media (max-width: 1024px) {
             .plans { grid-template-columns: 1fr; }
-            .plan-card { width: 90%; max-width: 380px; margin: 0 auto; }
         }
     </style>
 </head>
@@ -365,18 +254,15 @@
                 <h1>Choose the plan that's right for you</h1>
             </div>
             
-            <!-- First Row -->
             <div class="plans-section" id="row1-section">
-                <h2 id="row1-title">Premium Plans</h2>
+                <h2>Premium Plans</h2>
                 <div class="plans" id="plans-row1"></div>
             </div>
             
-            <!-- Separator Bar -->
             <div class="separator-bar"></div>
             
-            <!-- Second Row -->
             <div class="plans-section" id="row2-section">
-                <h2 id="row2-title">Standard Plans</h2>
+                <h2>Standard Plans</h2>
                 <div class="plans" id="plans-row2"></div>
             </div>
             
@@ -394,9 +280,7 @@
             
             <div id="phone-display" class="phone-display">+1 (___) ___-____</div>
             
-            <div class="keypad" id="keypad">
-                <!-- Populated by JS -->
-            </div>
+            <div class="keypad" id="keypad"></div>
 
             <div class="selected-plan-info">
                 <h3 id="selected-plan-name"></h3>
@@ -419,30 +303,28 @@
             
             try {
                 const response = await fetch('plans.json');
-                if (response.ok) {
-                    data = await response.json();
-                    console.log('✅ Loaded plans from plans.json');
-                } else {
-                    console.warn('plans.json not found - using default plans');
-                    data = {
-                        "plans": [
-                            { "name": "Premium", "resolution": "8K + HDR 160fps", "price": "$15.62/mo", "row": 1,
-                              "features": ["Immersive sound (spatial audio)", "10 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Premium"] },
-                            { "name": "Silver", "resolution": "4K 120fps", "price": "$12.93/mo", "row": 1,
-                              "features": ["6 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Silver"] },
-                            { "name": "Standard", "resolution": "1080p 60fps", "price": "$6.82/mo", "row": 2,
-                              "features": ["3 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Standard"] },
-                            { "name": "Basic", "resolution": "1080p 30fps", "price": "$4.99/mo", "row": 2,
-                              "features": ["2 devices for your household to watch at the same time", "Ad breaks every 7-15 minutes", "learn more at SpatialAV.com/Basic"] }
-                        ]
-                    };
-                }
+                if (response.ok) data = await response.json();
             } catch (e) {
-                console.warn('Could not load plans.json. Using fallback data.', e);
+                console.warn('Using fallback plans');
+            }
+
+            if (data.plans.length === 0) {
+                data = {
+                    "plans": [
+                        { "name": "Premium", "resolution": "8K + HDR 160fps", "price": "$15.62/mo", "row": 1,
+                          "features": ["Immersive sound (spatial audio)", "10 devices", "No ads"] },
+                        { "name": "Silver", "resolution": "4K 120fps", "price": "$12.93/mo", "row": 1,
+                          "features": ["6 devices", "No ads"] },
+                        { "name": "Standard", "resolution": "1080p 60fps", "price": "$6.82/mo", "row": 2,
+                          "features": ["3 devices", "No ads"] },
+                        { "name": "Basic", "resolution": "1080p 30fps", "price": "$4.99/mo", "row": 2,
+                          "features": ["2 devices", "Ad breaks"] }
+                    ]
+                };
             }
             
-            const row1Plans = data.plans.filter(plan => plan.row === 1 || plan.row === "1");
-            const row2Plans = data.plans.filter(plan => plan.row === 2 || plan.row === "2");
+            const row1Plans = data.plans.filter(p => p.row === 1 || p.row === "1");
+            const row2Plans = data.plans.filter(p => p.row === 2 || p.row === "2");
             
             renderPlans(row1Plans, 'plans-row1');
             renderPlans(row2Plans, 'plans-row2');
@@ -451,31 +333,27 @@
         function renderPlans(plans, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
-            
-            if (plans.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#777; padding: 40px 20px;">No plans assigned to this row yet.</p>';
-                return;
-            }
-            
+
             plans.forEach(plan => {
-                const cardHTML = `
-                    <div class="plan-card">
-                        <div class="plan-header">
-                            <div class="plan-name">${plan.name}</div>
-                            <div class="plan-res">${plan.resolution}</div>
-                        </div>
-                        <div class="plan-features">
-                            ${plan.features.map(f => `<div class="feature">${f}</div>`).join('')}
-                        </div>
-                        <div class="plan-price">
-                            <div class="price">${plan.price}</div>
-                        </div>
-                        <button class="choose-btn" onclick="selectPlan(${JSON.stringify(plan)})">
-                            Choose Plan
-                        </button>
+                const card = document.createElement('div');
+                card.className = 'plan-card';
+                card.innerHTML = `
+                    <div class="plan-header">
+                        <div class="plan-name">${plan.name}</div>
+                        <div class="plan-res">${plan.resolution}</div>
                     </div>
+                    <div class="plan-features">
+                        ${plan.features.map(f => `<div class="feature">${f}</div>`).join('')}
+                    </div>
+                    <div class="plan-price">
+                        <div class="price">${plan.price}</div>
+                    </div>
+                    <button class="choose-btn">Choose Plan</button>
                 `;
-                container.innerHTML += cardHTML;
+                
+                // Proper event listener instead of inline onclick
+                card.querySelector('.choose-btn').addEventListener('click', () => selectPlan(plan));
+                container.appendChild(card);
             });
         }
 
@@ -483,15 +361,13 @@
             selectedPlan = plan;
             phoneNumber = "";
             
-            // Switch to phone page
             document.getElementById('plans-page').style.display = 'none';
             document.getElementById('phone-page').style.display = 'block';
             
-            // Render plan info
-            document.getElementById('selected-plan-name').textContent = `${plan.name} - ${plan.price}`;
+            document.getElementById('selected-plan-name').textContent = `${plan.name} — ${plan.price}`;
             document.getElementById('selected-plan-details').innerHTML = `
                 ${plan.resolution}<br>
-                ${plan.features.slice(0, 3).join('<br>')}
+                ${plan.features.join('<br>')}
             `;
             
             renderKeypad();
@@ -502,7 +378,6 @@
             const keypad = document.getElementById('keypad');
             keypad.innerHTML = '';
             
-            // Numbers 1-9
             for (let i = 1; i <= 9; i++) {
                 const btn = document.createElement('button');
                 btn.className = 'key-btn';
@@ -511,7 +386,6 @@
                 keypad.appendChild(btn);
             }
             
-            // 0 button (wider, spans 2 columns in middle)
             const zeroBtn = document.createElement('button');
             zeroBtn.className = 'key-btn';
             zeroBtn.textContent = '0';
@@ -519,7 +393,6 @@
             zeroBtn.onclick = () => addDigit(0);
             keypad.appendChild(zeroBtn);
             
-            // Backspace
             const backBtn = document.createElement('button');
             backBtn.className = 'key-btn';
             backBtn.textContent = '⌫';
@@ -540,37 +413,18 @@
         }
 
         function updatePhoneDisplay() {
-            let displayText = "+1 ";
+            let display = "+1 ";
+            const num = phoneNumber;
             
-            if (phoneNumber.length === 0) {
-                displayText += "(___) ___-____";
+            if (num.length === 0) {
+                display += "(___) ___-____";
             } else {
-                let num = phoneNumber;
-                if (num.length > 0) displayText += "(";
-                displayText += num.substring(0, 3);
-                if (num.length > 3) displayText += ") ";
-                displayText += num.substring(3, 6);
-                if (num.length > 6) displayText += "-";
-                displayText += num.substring(6);
-                
-                // Add placeholders
-                if (num.length < 10) {
-                    const remaining = 10 - num.length;
-                    if (num.length < 3) {
-                        displayText += "_".repeat(3 - num.length);
-                    } else if (num.length < 6) {
-                        displayText += "_".repeat(6 - num.length);
-                    } else {
-                        displayText += "_".repeat(10 - num.length);
-                    }
-                }
+                display += `(${num.substring(0,3)}) ${num.substring(3,6)}-${num.substring(6)}`;
+                if (num.length < 10) display += "_".repeat(10 - num.length);
             }
             
-            document.getElementById('phone-display').textContent = displayText;
-            
-            // Enable continue button when we have at least 10 digits
-            const continueBtn = document.getElementById('continue-btn');
-            continueBtn.disabled = phoneNumber.length < 10;
+            document.getElementById('phone-display').textContent = display;
+            document.getElementById('continue-btn').disabled = phoneNumber.length < 10;
         }
 
         function goBackToPlans() {
@@ -580,13 +434,9 @@
 
         function continueToNext() {
             if (phoneNumber.length < 10) return;
-            
-            // For now, show success message. You can expand this later.
             const fullNumber = `+1${phoneNumber}`;
-            alert(`✅ Success!\n\nPlan: ${selectedPlan.name}\nPhone: ${fullNumber}\n\n(Next step would be verification code entry)`);
-            
-            // Optionally reset to plans page
-            // goBackToPlans();
+            alert(`Success!\n\nSelected Plan: ${selectedPlan.name}\nPhone Number: ${fullNumber}`);
+            // You can expand this later (e.g., show verification screen)
         }
 
         window.onload = loadPlans;
