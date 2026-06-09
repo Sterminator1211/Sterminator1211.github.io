@@ -78,6 +78,17 @@
             margin-bottom: 12px;
         }
         
+        .plans-section {
+            margin-bottom: 60px;
+        }
+        
+        .plans-section h2 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #b3b3b3;
+        }
+        
         .plans {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -86,6 +97,14 @@
             padding: 0 20px;
             max-width: 1600px;
             margin: 0 auto;
+        }
+        
+        .separator-bar {
+            height: 4px;
+            background: linear-gradient(to right, transparent, #e50914, transparent);
+            margin: 40px auto;
+            max-width: 800px;
+            border-radius: 2px;
         }
         
         .plan-card {
@@ -181,8 +200,8 @@
         }
         
         @media (max-width: 1024px) {
-            .plans { flex-direction: column; align-items: center; }
-            .plan-card { width: 90%; max-width: 380px; }
+            .plans { grid-template-columns: 1fr; }
+            .plan-card { width: 90%; max-width: 380px; margin: 0 auto; }
         }
     </style>
 </head>
@@ -201,8 +220,19 @@
             <h1>Choose the plan that's right for you</h1>
         </div>
         
-        <div class="plans" id="plans-container">
-            <!-- Plans loaded here -->
+        <!-- First Row -->
+        <div class="plans-section" id="row1-section">
+            <h2 id="row1-title">Premium Plans</h2>
+            <div class="plans" id="plans-row1"></div>
+        </div>
+        
+        <!-- Separator Bar -->
+        <div class="separator-bar"></div>
+        
+        <!-- Second Row -->
+        <div class="plans-section" id="row2-section">
+            <h2 id="row2-title">Standard Plans</h2>
+            <div class="plans" id="plans-row2"></div>
         </div>
         
         <div class="footer-text"> 
@@ -211,55 +241,8 @@
     </div>
 
     <script>
-        const defaultPlans = {
-            "plans": [
-                {
-                    "name": "Premium",
-                    "resolution": "8K + HDR 160fps",
-                    "price": "$15.62/mo",
-                    "features": [
-                        "Immersive sound (spatial audio)",
-                        "10 devices for your household to watch at the same time",
-                        "No ads",
-                        "learn more at SpatialAV.com/Premium"
-                    ]
-                },
-                {
-                    "name": "Silver",
-                    "resolution": "4K 120fps",
-                    "price": "$12.93/mo",
-                    "features": [
-                        "6 devices for your household to watch at the same time",
-                        "No ads",
-                        "learn more at SpatialAV.com/Silver"
-                    ]
-                },
-                {
-                    "name": "Standard",
-                    "resolution": "1080p 60fps",
-                    "price": "$6.82/mo",
-                    "features": [
-                        "3 devices for your household to watch at the same time",
-                        "No ads",
-                        "learn more at SpatialAV.com/Standard"
-                    ]
-                },
-                {
-                    "name": "Basic",
-                    "resolution": "1080p 30fps",
-                    "price": "$4.99/mo",
-                    "features": [
-                        "2 devices for your household to watch as the same time",
-                        "Ad breaks every 7-15 minutes",
-                        "learn more at SpatialAV.com/Basic"
-
-                    ]
-                }
-            ]
-        };
-
         async function loadPlans() {
-            let data = defaultPlans;
+            let data = { "plans": [] };
             
             try {
                 const response = await fetch('plans.json');
@@ -267,16 +250,43 @@
                     data = await response.json();
                     console.log('✅ Loaded plans from plans.json');
                 } else {
-                    console.warn('plans.json not found, using default data');
+                    console.warn('plans.json not found - using default plans');
+                    // Fallback default plans
+                    data = {
+                        "plans": [
+                            { "name": "Premium", "resolution": "8K + HDR 160fps", "price": "$15.62/mo", "row": 1,
+                              "features": ["Immersive sound (spatial audio)", "10 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Premium"] },
+                            { "name": "Silver", "resolution": "4K 120fps", "price": "$12.93/mo", "row": 1,
+                              "features": ["6 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Silver"] },
+                            { "name": "Standard", "resolution": "1080p 60fps", "price": "$6.82/mo", "row": 1,
+                              "features": ["3 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Standard"] },
+                            { "name": "Basic", "resolution": "1080p 30fps", "price": "$4.99/mo", "row": 1,
+                              "features": ["2 devices for your household to watch at the same time", "Ad breaks every 7-15 minutes", "learn more at SpatialAV.com/Basic"] }
+                        ]
+                    };
                 }
             } catch (e) {
-                console.warn('Could not load plans.json (local file restriction). Using default data.', e);
+                console.warn('Could not load plans.json. Using fallback data.', e);
             }
             
-            const container = document.getElementById('plans-container');
+            // Filter plans by row property (supports both number and string)
+            const row1Plans = data.plans.filter(plan => plan.row === 1 || plan.row === "1");
+            const row2Plans = data.plans.filter(plan => plan.row === 2 || plan.row === "2");
+            
+            renderPlans(row1Plans, 'plans-row1');
+            renderPlans(row2Plans, 'plans-row2');
+        }
+
+        function renderPlans(plans, containerId) {
+            const container = document.getElementById(containerId);
             container.innerHTML = '';
             
-            data.plans.forEach(plan => {
+            if (plans.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#777; padding: 40px 20px;">No plans assigned to this row yet.</p>';
+                return;
+            }
+            
+            plans.forEach(plan => {
                 const cardHTML = `
                     <div class="plan-card">
                         <div class="plan-header">
