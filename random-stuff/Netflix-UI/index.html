@@ -7,15 +7,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@400;500;700&display=swap');
         
-        :root {
-            --netflix-red: #e50914;
-        }
+        :root { --netflix-red: #e50914; }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Netflix Sans', Arial, sans-serif;
@@ -30,9 +24,7 @@
             padding: 20px 50px;
             background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             z-index: 100;
         }
         
@@ -56,9 +48,7 @@
             font-size: 1.05rem;
         }
         
-        .nav a.active {
-            font-weight: 700;
-        }
+        .nav a.active { font-weight: 700; }
         
         .sign-in {
             margin-left: auto;
@@ -102,7 +92,6 @@
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            position: relative;
         }
         
         .plan-card:hover {
@@ -113,7 +102,6 @@
         .plan-header {
             padding: 32px 28px 20px;
             text-align: center;
-            position: relative;
         }
         
         .plan-name {
@@ -173,12 +161,9 @@
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
         }
         
-        .choose-btn:hover {
-            background: #f40612;
-        }
+        .choose-btn:hover { background: #f40612; }
         
         .footer-text {
             text-align: center;
@@ -192,15 +177,8 @@
         }
         
         @media (max-width: 1024px) {
-            .plans {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .plan-card {
-                width: 90%;
-                max-width: 380px;
-            }
+            .plans { flex-direction: column; align-items: center; }
+            .plan-card { width: 90%; max-width: 380px; }
         }
     </style>
 </head>
@@ -220,7 +198,7 @@
         </div>
         
         <div class="plans" id="plans-container">
-            <!-- Populated dynamically by JavaScript -->
+            <!-- Plans loaded here -->
         </div>
         
         <div class="footer-text">
@@ -230,46 +208,79 @@
     </div>
 
     <script>
+        const defaultPlans = {
+            "plans": [
+                {
+                    "name": "Premium",
+                    "resolution": "8K + HDR",
+                    "price": "$15.62/mo",
+                    "features": [
+                        "Immersive sound (spatial audio)",
+                        "10 devices for your household to watch at the same time",
+                        "No ads"
+                    ]
+                },
+                {
+                    "name": "Silver",
+                    "resolution": "4K",
+                    "price": "$12.93/mo",
+                    "features": [
+                        "6 devices for your household to watch at the same time",
+                        "No ads"
+                    ]
+                },
+                {
+                    "name": "Standard",
+                    "resolution": "1080p",
+                    "price": "$6.82/mo",
+                    "features": [
+                        "3 devices for your household to watch at the same time",
+                        "Ad breaks every 10-20 Minutes"
+                    ]
+                }
+            ]
+        };
+
         async function loadPlans() {
+            let data = defaultPlans;
+            
             try {
                 const response = await fetch('plans.json');
-                if (!response.ok) throw new Error('Failed to load plans');
-                
-                const data = await response.json();
-                
-                const container = document.getElementById('plans-container');
-                container.innerHTML = '';
-                
-                data.plans.forEach(plan => {
-                    const cardHTML = `
-                        <div class="plan-card">
-                            <div class="plan-header">
-                                <div class="plan-name">${plan.name}</div>
-                                <div class="plan-res">${plan.resolution}</div>
-                            </div>
-                            <div class="plan-features">
-                                ${plan.features.map(feature => `
-                                    <div class="feature">${feature}</div>
-                                `).join('')}
-                            </div>
-                            <div class="plan-price">
-                                <div class="price">${plan.price}</div>
-                            </div>
-                            <button class="choose-btn" onclick="alert('Selected: ${plan.name} - ${plan.price}')">Choose Plan</button>
-                        </div>
-                    `;
-                    container.innerHTML += cardHTML;
-                });
-            } catch (error) {
-                console.error('Error loading plans:', error);
-                document.getElementById('plans-container').innerHTML = `
-                    <p style="color: #e50914; text-align: center; font-size: 1.2rem;">
-                        Error loading plans.json. Make sure the file exists in the same folder.
-                    </p>`;
+                if (response.ok) {
+                    data = await response.json();
+                    console.log('✅ Loaded plans from plans.json');
+                } else {
+                    console.warn('plans.json not found, using default data');
+                }
+            } catch (e) {
+                console.warn('Could not load plans.json (local file restriction). Using default data.', e);
             }
+            
+            const container = document.getElementById('plans-container');
+            container.innerHTML = '';
+            
+            data.plans.forEach(plan => {
+                const cardHTML = `
+                    <div class="plan-card">
+                        <div class="plan-header">
+                            <div class="plan-name">${plan.name}</div>
+                            <div class="plan-res">${plan.resolution}</div>
+                        </div>
+                        <div class="plan-features">
+                            ${plan.features.map(f => `<div class="feature">${f}</div>`).join('')}
+                        </div>
+                        <div class="plan-price">
+                            <div class="price">${plan.price}</div>
+                        </div>
+                        <button class="choose-btn" onclick="alert('Selected: ${plan.name} - ${plan.price}')">
+                            Choose Plan
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
         }
-        
-        // Load plans when page loads
+
         window.onload = loadPlans;
     </script>
 </body>
