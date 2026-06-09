@@ -7,9 +7,15 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@400;500;700&display=swap');
         
-        :root { --netflix-red: #e50914; }
+        :root { 
+            --netflix-red: #e50914; 
+        }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
         
         body {
             font-family: 'Netflix Sans', Arial, sans-serif;
@@ -60,14 +66,21 @@
             cursor: pointer;
             font-size: 1rem;
         }
-        
+
+        /* Main container */
+        .main-content {
+            padding-top: 140px;
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding-top: 140px;
-            padding-bottom: 60px;
+            padding: 0 20px;
         }
-        
+
+        /* Plans Page */
         .plans-header {
             text-align: center;
             margin-bottom: 50px;
@@ -186,11 +199,141 @@
             cursor: pointer;
         }
         
-        .choose-btn:hover { background: #f40612; }
-        
+        .choose-btn:hover { 
+            background: #f40612; 
+        }
+
+        /* Phone Entry Page */
+        .phone-page {
+            max-width: 520px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .phone-page h1 {
+            font-size: 2.4rem;
+            margin-bottom: 12px;
+        }
+
+        .phone-page p {
+            color: #b3b3b3;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .phone-display {
+            background: #222;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 24px;
+            font-size: 2.2rem;
+            font-weight: 500;
+            letter-spacing: 4px;
+            margin-bottom: 40px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 50px;
+        }
+
+        .key-btn {
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            height: 90px;
+            font-size: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .key-btn:hover {
+            background: #555;
+            transform: scale(1.05);
+        }
+
+        .key-btn:active {
+            background: #e50914;
+        }
+
+        .keypad-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 18px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #666;
+        }
+
+        .selected-plan-info {
+            background: #1f1f1f;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 40px 0;
+            text-align: left;
+        }
+
+        .selected-plan-info h3 {
+            color: #e50914;
+            margin-bottom: 8px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 50px;
+        }
+
+        .nav-btn {
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: 160px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 2px solid #666;
+            color: #fff;
+        }
+
+        .btn-continue {
+            background: #e50914;
+            border: none;
+            color: white;
+        }
+
+        .btn-continue:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
         .footer-text {
             text-align: center;
-            margin-top: 60px;
+            margin-top: 80px;
             font-size: 0.95rem;
             color: #b3b3b3;
             max-width: 860px;
@@ -198,7 +341,7 @@
             margin-right: auto;
             line-height: 1.6;
         }
-        
+
         @media (max-width: 1024px) {
             .plans { grid-template-columns: 1fr; }
             .plan-card { width: 90%; max-width: 380px; margin: 0 auto; }
@@ -215,32 +358,62 @@
         <button class="sign-in">Sign In</button>
     </header>
 
-    <div class="container">
-        <div class="plans-header">
-            <h1>Choose the plan that's right for you</h1>
+    <!-- Plans Page -->
+    <div id="plans-page" class="main-content">
+        <div class="container">
+            <div class="plans-header">
+                <h1>Choose the plan that's right for you</h1>
+            </div>
+            
+            <!-- First Row -->
+            <div class="plans-section" id="row1-section">
+                <h2 id="row1-title">Premium Plans</h2>
+                <div class="plans" id="plans-row1"></div>
+            </div>
+            
+            <!-- Separator Bar -->
+            <div class="separator-bar"></div>
+            
+            <!-- Second Row -->
+            <div class="plans-section" id="row2-section">
+                <h2 id="row2-title">Standard Plans</h2>
+                <div class="plans" id="plans-row2"></div>
+            </div>
+            
+            <div class="footer-text"> 
+                Learn more at SpatialAV.com/Pricing. Live entertainment is included with any SpatialAV plan and contains ads.
+            </div>
         </div>
-        
-        <!-- First Row -->
-        <div class="plans-section" id="row1-section">
-            <h2 id="row1-title">Audio & Video Plans</h2>
-            <div class="plans" id="plans-row1"></div>
-        </div>
-        
-        <!-- Separator Bar -->
-        <div class="separator-bar"></div>
-        
-        <!-- Second Row -->
-        <div class="plans-section" id="row2-section">
-            <h2 id="row2-title">Audio Plans</h2>
-            <div class="plans" id="plans-row2"></div>
-        </div>
-        
-        <div class="footer-text"> 
-            Learn more at SpatialAV.com/Pricing. Live entertainment is included with any SpatialAV plan and contains ads.
+    </div>
+
+    <!-- Phone Entry Page -->
+    <div id="phone-page" class="main-content" style="display: none;">
+        <div class="container phone-page">
+            <h1>Enter your phone number</h1>
+            <p>We'll send a verification code to this number</p>
+            
+            <div id="phone-display" class="phone-display">+1 (___) ___-____</div>
+            
+            <div class="keypad" id="keypad">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="selected-plan-info">
+                <h3 id="selected-plan-name"></h3>
+                <p id="selected-plan-details"></p>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn btn-back" onclick="goBackToPlans()">Back</button>
+                <button id="continue-btn" class="nav-btn btn-continue" onclick="continueToNext()" disabled>Continue</button>
+            </div>
         </div>
     </div>
 
     <script>
+        let selectedPlan = null;
+        let phoneNumber = "";
+
         async function loadPlans() {
             let data = { "plans": [] };
             
@@ -251,16 +424,15 @@
                     console.log('✅ Loaded plans from plans.json');
                 } else {
                     console.warn('plans.json not found - using default plans');
-                    // Fallback default plans
                     data = {
                         "plans": [
                             { "name": "Premium", "resolution": "8K + HDR 160fps", "price": "$15.62/mo", "row": 1,
                               "features": ["Immersive sound (spatial audio)", "10 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Premium"] },
                             { "name": "Silver", "resolution": "4K 120fps", "price": "$12.93/mo", "row": 1,
                               "features": ["6 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Silver"] },
-                            { "name": "Standard", "resolution": "1080p 60fps", "price": "$6.82/mo", "row": 1,
+                            { "name": "Standard", "resolution": "1080p 60fps", "price": "$6.82/mo", "row": 2,
                               "features": ["3 devices for your household to watch at the same time", "No ads", "learn more at SpatialAV.com/Standard"] },
-                            { "name": "Basic", "resolution": "1080p 30fps", "price": "$4.99/mo", "row": 1,
+                            { "name": "Basic", "resolution": "1080p 30fps", "price": "$4.99/mo", "row": 2,
                               "features": ["2 devices for your household to watch at the same time", "Ad breaks every 7-15 minutes", "learn more at SpatialAV.com/Basic"] }
                         ]
                     };
@@ -269,7 +441,6 @@
                 console.warn('Could not load plans.json. Using fallback data.', e);
             }
             
-            // Filter plans by row property (supports both number and string)
             const row1Plans = data.plans.filter(plan => plan.row === 1 || plan.row === "1");
             const row2Plans = data.plans.filter(plan => plan.row === 2 || plan.row === "2");
             
@@ -299,13 +470,123 @@
                         <div class="plan-price">
                             <div class="price">${plan.price}</div>
                         </div>
-                        <button class="choose-btn" onclick="alert('Selected: ${plan.name} - ${plan.price}')">
+                        <button class="choose-btn" onclick="selectPlan(${JSON.stringify(plan)})">
                             Choose Plan
                         </button>
                     </div>
                 `;
                 container.innerHTML += cardHTML;
             });
+        }
+
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            phoneNumber = "";
+            
+            // Switch to phone page
+            document.getElementById('plans-page').style.display = 'none';
+            document.getElementById('phone-page').style.display = 'block';
+            
+            // Render plan info
+            document.getElementById('selected-plan-name').textContent = `${plan.name} - ${plan.price}`;
+            document.getElementById('selected-plan-details').innerHTML = `
+                ${plan.resolution}<br>
+                ${plan.features.slice(0, 3).join('<br>')}
+            `;
+            
+            renderKeypad();
+            updatePhoneDisplay();
+        }
+
+        function renderKeypad() {
+            const keypad = document.getElementById('keypad');
+            keypad.innerHTML = '';
+            
+            // Numbers 1-9
+            for (let i = 1; i <= 9; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'key-btn';
+                btn.textContent = i;
+                btn.onclick = () => addDigit(i);
+                keypad.appendChild(btn);
+            }
+            
+            // 0 button (wider, spans 2 columns in middle)
+            const zeroBtn = document.createElement('button');
+            zeroBtn.className = 'key-btn';
+            zeroBtn.textContent = '0';
+            zeroBtn.style.gridColumn = 'span 2';
+            zeroBtn.onclick = () => addDigit(0);
+            keypad.appendChild(zeroBtn);
+            
+            // Backspace
+            const backBtn = document.createElement('button');
+            backBtn.className = 'key-btn';
+            backBtn.textContent = '⌫';
+            backBtn.onclick = backspace;
+            keypad.appendChild(backBtn);
+        }
+
+        function addDigit(digit) {
+            if (phoneNumber.length < 10) {
+                phoneNumber += digit;
+                updatePhoneDisplay();
+            }
+        }
+
+        function backspace() {
+            phoneNumber = phoneNumber.slice(0, -1);
+            updatePhoneDisplay();
+        }
+
+        function updatePhoneDisplay() {
+            let displayText = "+1 ";
+            
+            if (phoneNumber.length === 0) {
+                displayText += "(___) ___-____";
+            } else {
+                let num = phoneNumber;
+                if (num.length > 0) displayText += "(";
+                displayText += num.substring(0, 3);
+                if (num.length > 3) displayText += ") ";
+                displayText += num.substring(3, 6);
+                if (num.length > 6) displayText += "-";
+                displayText += num.substring(6);
+                
+                // Add placeholders
+                if (num.length < 10) {
+                    const remaining = 10 - num.length;
+                    if (num.length < 3) {
+                        displayText += "_".repeat(3 - num.length);
+                    } else if (num.length < 6) {
+                        displayText += "_".repeat(6 - num.length);
+                    } else {
+                        displayText += "_".repeat(10 - num.length);
+                    }
+                }
+            }
+            
+            document.getElementById('phone-display').textContent = displayText;
+            
+            // Enable continue button when we have at least 10 digits
+            const continueBtn = document.getElementById('continue-btn');
+            continueBtn.disabled = phoneNumber.length < 10;
+        }
+
+        function goBackToPlans() {
+            document.getElementById('phone-page').style.display = 'none';
+            document.getElementById('plans-page').style.display = 'block';
+        }
+
+        function continueToNext() {
+            if (phoneNumber.length < 10) return;
+            
+            // For now, show success message. You can expand this later.
+            const fullNumber = `+1${phoneNumber}`;
+            alert(`✅ Success!\n\nPlan: ${selectedPlan.name}\nPhone: ${fullNumber}\n\n(Next step would be verification code entry)`);
+            
+            // Optionally reset to plans page
+            // goBackToPlans();
         }
 
         window.onload = loadPlans;
