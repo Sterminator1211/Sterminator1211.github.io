@@ -1,0 +1,17 @@
+{
+  "plans": [
+    {
+      "name": "Premium",
+      "resolution": "4K + HDR",
+      "price": "$26.99/mo",
+      "features": [
+        "Best video quality",
+        "Immersive sound (spatial audio)",
+        "4 devices for your household to watch at the same time",
+        "Cancel anytime",
+        "No ads"
+      ]
+    },
+    // ... other plans
+  ]
+}
