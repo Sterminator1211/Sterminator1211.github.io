@@ -79,19 +79,23 @@
         }
         
         .plans {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
+            padding: 0 20px;
+            max-width: 1400px;
             justify-content: center;
-            flex-wrap: wrap;
+            margin: 0 auto;
         }
         
         .plan-card {
             background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
             border-radius: 8px;
-            width: 340px;
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
         }
         
         .plan-card:hover {
@@ -118,7 +122,7 @@
         
         .plan-features {
             padding: 0 28px 32px;
-            min-height: 280px;
+            flex-grow: 1;
         }
         
         .feature {
