@@ -43,6 +43,30 @@
               "learn more at SpatialAV.com/Basic"
 
           ],
+          "row": 1
+      },
+      {
+          "name": "Silver Audio",
+          "resolution": "32bit + 128kHz",
+          "price": "$2.30/mo",
+          "features": [
+              "5 devices for your household to listen as the same time",
+              "No Ads",
+              "learn more at SpatialAV.com/Audio/Silver"
+
+          ],
+          "row": 2
+      },,
+      {
+          "name": "Standard Audio",
+          "resolution": "26bit + 84kHz",
+          "price": "$1.50/mo",
+          "features": [
+              "2 devices for your household to listen as the same time",
+              "No Ads",
+              "learn more at SpatialAV.com/Audio/Standard"
+
+          ],
           "row": 2
       }
   ]
