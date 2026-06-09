@@ -2,16 +2,48 @@
   "plans": [
     {
       "name": "Premium",
-      "resolution": "4K + HDR",
-      "price": "$26.99/mo",
+      "resolution": "8K + HDR 160fps",
+      "price": "$16.62/mo",
       "features": [
-        "Best video quality",
         "Immersive sound (spatial audio)",
-        "4 devices for your household to watch at the same time",
-        "Cancel anytime",
+        "10 devices for your household to watch at the same time",
         "No ads"
-      ]
+      ],
+      "row": 1
     },
-    // ... other plans
+    {
+      "name": "Silver",
+      "resolution": "4K 120fps",
+      "price": "$12.93/mo",
+      "features": [
+          "6 devices for your household to watch at the same time",
+          "No ads",
+          "learn more at SpatialAV.com/Silver"
+        ],
+      "row": 1
+      },
+      {
+          "name": "Standard",
+          "resolution": "1080p 60fps",
+          "price": "$6.82/mo",
+          "features": [
+              "3 devices for your household to watch at the same time",
+              "No ads",
+              "learn more at SpatialAV.com/Standard"
+        ],
+        "row": 1
+      },
+      {
+          "name": "Basic",
+          "resolution": "1080p 30fps",
+          "price": "$4.99/mo",
+          "features": [
+              "2 devices for your household to watch as the same time",
+              "Ad breaks every 7-15 minutes",
+              "learn more at SpatialAV.com/Basic"
+
+          ],
+          "row": 2
+      }
   ]
 }
