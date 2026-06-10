@@ -1,22 +1,16 @@
 // api/send-otp.js
 export default async function handler(req, res) {
-    if (req.method !== "POST") return res.status(405).end();
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
 
     const { otp, to } = req.body;
 
-    const emailBody = `
-        Your SpatialAV 6-digit code is: ${otp}
-
-        This code was requested for verification.
-        Static phone: ${process.env.STATIC_PHONE || 'Configured in account'}
-        Expires in 10 minutes.
-    `;
-
-    // === SIMPLE SEND USING FETCH TO A MAIL SERVICE ===
-    // Recommended: Sign up for free tier at resend.com or brevo.com and use their API
+    if (!otp || !to) {
+        return res.status(400).json({ error: 'Missing OTP or email' });
+    }
 
     try {
-        // Example with Resend (easiest - replace with your key from secrets)
         const response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -24,20 +18,26 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'SpatialAV <onboarding@yourdomain.com>',   // verified domain
+                from: 'SpatialAV <noreply@resend.dev>', // You can change this after verifying a domain
                 to: to,
                 subject: 'Your SpatialAV Verification Code',
-                text: emailBody
+                html: `
+                    <h2>Your verification code is: <strong>${otp}</strong></h2>
+                    <p>This code expires in 10 minutes.</p>
+                    <p>Thank you for choosing SpatialAV!</p>
+                `
             })
         });
 
         if (response.ok) {
             res.status(200).json({ success: true });
         } else {
-            res.status(500).json({ error: 'Send failed' });
+            const errorData = await response.text();
+            console.error(errorData);
+            res.status(500).json({ error: 'Failed to send email' });
         }
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
 }
