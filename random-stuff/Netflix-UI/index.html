@@ -96,7 +96,6 @@
             cursor: pointer;
         }
 
-        /* Phone & OTP Pages */
         .phone-page, .otp-page {
             max-width: 520px;
             margin: 0 auto;
@@ -257,21 +256,37 @@
     </div>
 
     <script>
-        // ==================== OTP HANDLER (Integrated) ====================
+        // ==================== CONFIG & OTP LOGIC ====================
+        let TEM_EMAIL = null;
         let enteredOtp = "";
         let generatedOtp = null;
         let selectedPlanRef = null;
-        const TEM_EMAIL = "{{TEMADDRESS}}";   // ← GitHub secret will replace this
+
+        async function loadTemEmail() {
+            try {
+                const res = await fetch('/api/get-email');
+                const data = await res.json();
+                if (data.email) {
+                    TEM_EMAIL = data.email;
+                    console.log("✅ TEM_EMAIL loaded successfully:", TEM_EMAIL);
+                } else {
+                    console.error("TEMADDRESS not found in environment variables");
+                }
+            } catch (e) {
+                console.error("Failed to load TEM_EMAIL", e);
+            }
+        }
 
         function generateRandomOtp() {
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
 
         async function sendOtp(otp) {
-            if (!TEM_EMAIL || TEM_EMAIL.includes("{{TEMADDRESS}}")) {
-                alert("TEMADDRESS secret not configured.");
+            if (!TEM_EMAIL) {
+                alert("Email service not configured. Please refresh the page.");
                 return false;
             }
+
             try {
                 const response = await fetch('/api/send-otp', {
                     method: 'POST',
@@ -352,7 +367,7 @@
             }
         }
 
-        // ==================== MAIN APP LOGIC ====================
+        // ==================== MAIN APP ====================
         let selectedPlan = null;
         let phoneNumber = "";
 
@@ -480,7 +495,11 @@
             if (selectedPlan) showOtpPage(selectedPlan);
         }
 
-        window.onload = loadPlans;
+        // Initialize
+        window.addEventListener('load', async () => {
+            await loadTemEmail();
+            loadPlans();
+        });
     </script>
 </body>
 </html>
