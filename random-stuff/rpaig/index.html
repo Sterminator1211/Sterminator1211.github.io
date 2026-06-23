@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Sender via Text.Email</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // Replace with your actual EmailJS Public Key
+            emailjs.init("YOUR_PUBLIC_KEY"); 
+        })();
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
+
+    <div class="w-full max-w-sm bg-black border-4 border-gray-800 rounded-[2.5rem] shadow-2xl overflow-hidden relative aspect-[9/19] flex flex-col p-6">
+        
+        <div class="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-4 bg-gray-800 rounded-full"></div>
+
+        <div class="flex justify-between items-center text-xs text-gray-400 mt-2 mb-6 px-2">
+            <span>9:41</span>
+            <div class="flex space-x-1">
+                <span>📶</span>
+                <span>🔋</span>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col justify-between">
+            <div>
+                <h1 class="text-xl font-semibold tracking-tight text-white mb-1">New Text Message</h1>
+                <p class="text-xs text-gray-400 mb-6">Powered by EmailJS & TextDotEmail</p>
+
+                <form id="sms-form" class="space-y-4">
+                    <div>
+                        <label for="phone_number" class="block text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">To: (10-Digit Phone)</label>
+                        <input type="tel" name="phone_number" id="phone_number" placeholder="5551234567" pattern="[0-9]{10}" required 
+                            class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 text-sm transition">
+                    </div>
+
+                    <div>
+                        <label for="message" class="block text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Message</label>
+                        <textarea name="message" id="message" rows="6" maxlength="160" placeholder="Type text here..." required
+                            class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 text-sm transition resize-none"></textarea>
+                    </div>
+
+                    <input type="hidden" name="sms_gateway_email" id="sms_gateway_email">
+
+                    <button type="submit" id="submit-btn"
+                        class="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-3 px-4 rounded-xl transition text-sm cursor-pointer mt-2">
+                        Send Text
+                    </button>
+                </form>
+            </div>
+
+            <div id="status-message" class="text-xs text-center p-2 rounded-lg hidden transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('sms-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const statusMsg = document.getElementById('status-message');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const phone = document.getElementById('phone_number').value.trim();
+            
+            // TextDotEmail format: format phone number + @text.email
+            document.getElementById('sms_gateway_email').value = phone + "@text.email";
+
+            submitBtn.innerText = 'Sending...';
+            submitBtn.disabled = true;
+
+            // Update with your actual EmailJS IDs
+            const serviceID = 'YOUR_SERVICE_ID';
+            const templateID = 'YOUR_TEMPLATE_ID';
+
+            emailjs.sendForm(serviceID, templateID, this)
+                .then(() => {
+                    submitBtn.innerText = 'Send Text';
+                    submitBtn.disabled = false;
+                    
+                    statusMsg.textContent = "Delivered to Text.Email gateway.";
+                    statusMsg.className = "text-xs text-center p-2 rounded-lg bg-green-950/50 text-green-400 border border-green-900 block";
+                    form.reset();
+                }, (err) => {
+                    submitBtn.innerText = 'Send Text';
+                    submitBtn.disabled = false;
+                    
+                    statusMsg.textContent = "Error: Could not send.";
+                    statusMsg.className = "text-xs text-center p-2 rounded-lg bg-red-950/50 text-red-400 border border-red-900 block";
+                    console.error(err);
+                });
+        });
+    </script>
+</body>
+</html>
