@@ -1,0 +1,10 @@
+{
+  "name": "shortcut-upload-api",
+  "version": "1.0.0",
+  "description": "Receive JSON from iOS Shortcuts and save each upload as its own JSON file in a GitHub repository.",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@octokit/rest": "^22.0.0"
+  }
+}
