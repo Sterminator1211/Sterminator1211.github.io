@@ -6,7 +6,6 @@ const octokit = new Octokit({
 
 const owner = process.env.GITHUB_OWNER!;
 const repo = process.env.GITHUB_REPO!;
-
 const branch = process.env.GITHUB_BRANCH || "main";
 
 export async function getFile(path: string) {
@@ -19,34 +18,26 @@ export async function getFile(path: string) {
         });
 
         if (Array.isArray(response.data)) {
-            throw new Error("Path is a directory");
+            throw new Error("Expected file, got directory.");
         }
 
-        if (!("content" in response.data)) {
-            throw new Error("File content missing");
-        }
+        return JSON.parse(
+            Buffer.from(response.data.content, "base64").toString("utf8")
+        );
 
-        return {
-            content: Buffer.from(
-                response.data.content,
-                "base64"
-            ).toString("utf-8"),
-            sha: response.data.sha
-        };
+    } catch (err: any) {
 
-    } catch (error: any) {
-        if (error.status === 404) {
+        if (err.status === 404) {
             return null;
         }
 
-        throw error;
+        throw err;
     }
 }
 
-
 export async function createFile(
     path: string,
-    content: string,
+    data: unknown,
     message: string
 ) {
 
@@ -59,39 +50,45 @@ export async function createFile(
         message,
 
         content: Buffer
-            .from(content)
+            .from(JSON.stringify(data, null, 2))
             .toString("base64")
     });
 
 }
 
-
-export async function listDirectory(path: string) {
+export async function listUploads() {
 
     const response = await octokit.repos.getContent({
         owner,
         repo,
-        path,
+        path: "data",
         ref: branch
     });
 
-
     if (!Array.isArray(response.data)) {
-        throw new Error("Not a directory");
+        return [];
     }
 
+    return response.data
+        .filter(file => file.type === "file")
+        .sort((a, b) =>
+            b.name.localeCompare(a.name)
+        );
 
-    return response.data;
 }
 
+export async function getUpload(filename: string) {
+    return getFile(`data/${filename}`);
+}
 
-export async function getRawJSON(path: string) {
+export async function getLatestUpload() {
 
-    const file = await getFile(path);
+    const uploads = await listUploads();
 
-    if (!file) {
+    if (uploads.length === 0) {
         return null;
     }
 
-    return JSON.parse(file.content);
+    return getUpload(uploads[0].name);
+
 }
