@@ -1,12 +1,12 @@
 import { Octokit } from "@octokit/rest";
 
 const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN
+    auth: process.env.IODS_GH_TOKEN
 });
 
-const owner = process.env.GITHUB_OWNER!;
-const repo = process.env.GITHUB_REPO!;
-const branch = process.env.GITHUB_BRANCH || "main";
+const owner = process.env.IODS_GH_OWNER!;
+const repo = process.env.IODS_GH_REPO!;
+const branch = process.env.IODS_GH_BRANCH || "main";
 
 export async function getFile(path: string) {
     try {
@@ -18,11 +18,14 @@ export async function getFile(path: string) {
         });
 
         if (Array.isArray(response.data)) {
-            throw new Error("Expected file, got directory.");
+            throw new Error("Expected a file, received a directory.");
         }
 
         return JSON.parse(
-            Buffer.from(response.data.content, "base64").toString("utf8")
+            Buffer.from(
+                response.data.content,
+                "base64"
+            ).toString("utf8")
         );
 
     } catch (err: any) {
@@ -46,9 +49,7 @@ export async function createFile(
         repo,
         branch,
         path,
-
         message,
-
         content: Buffer
             .from(JSON.stringify(data, null, 2))
             .toString("base64")
@@ -89,6 +90,8 @@ export async function getLatestUpload() {
         return null;
     }
 
-    return getUpload(uploads[0].name);
+    return getUpload(
+        uploads[0].name
+    );
 
 }
