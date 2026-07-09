@@ -3,7 +3,7 @@ import { Octokit } from "@octokit/rest";
 const octokit = new Octokit({
     auth: process.env.IODS_GH_TOKEN
 });
-
+const DATA_DIR = process.env.IODS_DATA_DIR || "data";
 const owner = process.env.IODS_GH_OWNER!;
 const repo = process.env.IODS_GH_REPO!;
 const branch = process.env.IODS_GH_BRANCH || "main";
