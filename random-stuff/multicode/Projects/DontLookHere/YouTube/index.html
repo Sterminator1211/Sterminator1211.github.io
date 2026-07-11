@@ -1,431 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube</title>
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Roboto', Arial, sans-serif;
-            background-color: #0f0f0f;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        header {
-            background-color: #0f0f0f;
-            border-bottom: 1px solid #303030;
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            height: 56px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            margin-right: 40px;
-        }
-        .search-container {
-            flex: 1;
-            max-width: 640px;
-            display: flex;
-            margin: 0 40px;
-        }
-        .search-bar {
-            flex: 1;
-            height: 40px;
-            background: #121212;
-            border: 1px solid #303030;
-            border-radius: 40px 0 0 40px;
-            padding: 0 16px;
-            color: #fff;
-            font-size: 16px;
-        }
-        .search-btn {
-            width: 65px;
-            background: #222;
-            border: 1px solid #303030;
-            border-left: none;
-            border-radius: 0 40px 40px 0;
-            cursor: pointer;
-        }
-        .header-icons {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-        .sidebar {
-            width: 240px;
-            background: #0f0f0f;
-            position: fixed;
-            top: 56px;
-            bottom: 0;
-            overflow-y: auto;
-            border-right: 1px solid #303030;
-            padding-top: 12px;
-        }
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 24px;
-            color: #aaa;
-            cursor: pointer;
-        }
-        .sidebar-item:hover, .sidebar-item.active {
-            background: #272727;
-            color: #fff;
-        }
-        .main-content {
-            margin-top: 56px;
-            margin-left: 240px;
-            padding: 20px;
-            overflow-y: auto;
-            flex: 1;
-        }
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
-        }
-        .video-card {
-            cursor: pointer;
-        }
-        .thumbnail {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%; /* 16:9 */
-            background: #333;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .thumbnail img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .duration {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            padding: 2px 6px;
-            font-size: 12px;
-            border-radius: 3px;
-        }
-        .video-info {
-            display: flex;
-            margin-top: 12px;
-        }
-        .channel-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #666;
-            margin-right: 12px;
-        }
-        .video-details {
-            flex: 1;
-        }
-        .video-title {
-            font-size: 16px;
-            line-height: 1.3;
-            margin-bottom: 6px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .channel-name, .meta {
-            font-size: 14px;
-            color: #aaa;
-        }
-
-        /* Watch page - Improved layout */
-        #watch-page {
-            display: none;
-            flex-direction: column;
-            gap: 24px;
-            padding: 20px;
-            max-width: 1800px;
-            margin: 0 auto;
-        }
-        .watch-container {
-            display: flex;
-            gap: 24px;
-            align-items: flex-start;
-        }
-        .player-column {
-            flex: 1;
-            min-width: 0;
-        }
-        #player-container {
-            width: 100%;
-        }
-        #video-player {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #000;
-        }
-        .video-meta {
-            margin-top: 16px;
-        }
-        .comments {
-            margin-top: 32px;
-            background: #272727;
-            padding: 16px;
-            border-radius: 12px;
-        }
-
-        /* Up next sidebar - moves below on smaller screens or when needed */
-        .up-next-column {
-            width: 400px;
-            flex-shrink: 0;
-        }
-        #up-next {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .up-next-card {
-            display: flex;
-            gap: 12px;
-            cursor: pointer;
-        }
-        .up-next-thumbnail {
-            width: 160px;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .up-next-thumbnail img {
-            width: 100%;
-            border-radius: 8px;
-        }
-
-        @media (max-width: 1100px) {
-            .watch-container {
-                flex-direction: column;
-            }
-            .up-next-column {
-                width: 100%;
-            }
-            #up-next {
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <span style="font-size: 28px; margin-right: 8px;">▶️</span>
-            <span style="font-weight: bold; font-size: 20px;">YouTube</span>
-        </div>
-        <div class="search-container">
-            <input type="text" id="search-input" class="search-bar" placeholder="Search" onkeypress="if(event.key === 'Enter') searchVideos()">
-            <button class="search-btn" onclick="searchVideos()">🔍</button>
-        </div>
-        <div class="header-icons">
-            <span>🎥</span>
-            <span>🛎️</span>
-            <span>👤</span>
-        </div>
-    </header>
 
-    <nav class="sidebar">
-        <div class="sidebar-item active" onclick="showHome()"><span style="margin-right: 24px;">🏠</span> Home</div>
-        <div class="sidebar-item" onclick="alert('Trending coming soon')"><span style="margin-right: 24px;">🔥</span> Trending</div>
-        <div class="sidebar-item" onclick="alert('Subscriptions coming soon')"><span style="margin-right: 24px;">📺</span> Subscriptions</div>
-        <hr style="margin: 12px 24px; border-color: #303030;">
-        <div class="sidebar-item"><span style="margin-right: 24px;">📚</span> Library</div>
-        <div class="sidebar-item"><span style="margin-right: 24px;">🕒</span> History</div>
-    </nav>
+<!-- API KEY MODAL -->
+<div id="apiKeyModal" class="modal-overlay">
+  <div class="modal">
+    <svg class="yt-logo-icon" viewBox="0 0 90 20" width="90"><path d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 2.24288e-07 14.285 0 14.285 0C14.285 0 5.35042 2.24288e-07 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C0 5.35042 0 10 0 10C0 10 0 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5677 5.35042 27.9727 3.12324Z" fill="#FF0000"/><path d="M11.4253 14.2854L18.8477 10.0004L11.4253 5.71533V14.2854Z" fill="white"/></svg>
+    <h2>Connect your YouTube API key</h2>
+    <p>Paste your YouTube Data API v3 key below. It's stored only in your browser's local storage — never sent anywhere except directly to Google's API.</p>
+    <input type="text" id="apiKeyInput" placeholder="AIzaSy...">
+    <button id="apiKeySubmit">Save & continue</button>
+    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Don't have a key? Get one from Google Cloud Console →</a>
+  </div>
+</div>
 
-    <div id="home-page" class="main-content">
-        <h2 style="margin-bottom: 20px;">Recommended</h2>
-        <div id="video-grid" class="video-grid"></div>
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <button id="menuBtn" class="icon-btn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+    </button>
+    <a href="#" class="logo" id="logoBtn">
+      <svg viewBox="0 0 90 20" width="90"><path d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 2.24288e-07 14.285 0 14.285 0C14.285 0 5.35042 2.24288e-07 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C0 5.35042 0 10 0 10C0 10 0 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5677 5.35042 27.9727 3.12324Z" fill="#FF0000"/><path d="M11.4253 14.2854L18.8477 10.0004L11.4253 5.71533V14.2854Z" fill="white"/></svg>
+      <span>YouTube</span>
+    </a>
+  </div>
+
+  <div class="header-center">
+    <form id="searchForm" class="search-form">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search" autocomplete="off">
+      <button type="submit" class="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M21 20.3l-5.4-5.4c1-1.2 1.6-2.8 1.6-4.5C17.2 6.1 13.9 3 9.9 3S2.6 6.2 2.6 10.2s3.2 7.2 7.2 7.2c1.7 0 3.3-.6 4.5-1.6l5.4 5.4.9-.9zM4.1 10.4c0-3.2 2.6-5.7 5.7-5.7s5.7 2.6 5.7 5.7-2.6 5.7-5.7 5.7-5.7-2.5-5.7-5.7z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <div class="header-right">
+    <button id="keyBtn" class="icon-btn" title="API key settings" aria-label="API key settings">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12.9 2c-.94 0-1.77.6-2.06 1.5l-.24.75c-.13.4-.44.72-.83.86-.4.15-.85.1-1.2-.14l-.65-.44a2.2 2.2 0 0 0-2.7.28L4.1 5.9a2.2 2.2 0 0 0-.27 2.7l.43.65c.24.35.3.8.15 1.2-.14.4-.46.7-.86.83l-.75.24A2.2 2.2 0 0 0 1.3 13.5v1.02c0 .94.6 1.77 1.5 2.06l.75.24c.4.13.72.44.86.83.15.4.1.85-.14 1.2l-.43.66a2.2 2.2 0 0 0 .27 2.7l.72.72a2.2 2.2 0 0 0 2.7.27l.65-.43c.35-.24.8-.3 1.2-.15.4.14.7.46.83.86l.24.75c.29.9 1.12 1.5 2.06 1.5h1.02c.94 0 1.77-.6 2.06-1.5l.24-.75c.13-.4.44-.72.83-.86.4-.15.85-.1 1.2.14l.66.44c.85.57 2 .46 2.7-.27l.72-.72a2.2 2.2 0 0 0 .27-2.7l-.43-.66c-.24-.35-.3-.8-.15-1.2.14-.4.46-.7.86-.83l.75-.24c.9-.29 1.5-1.12 1.5-2.06V13.5c0-.94-.6-1.77-1.5-2.06l-.75-.24c-.4-.13-.72-.44-.86-.83-.15-.4-.1-.85.14-1.2l.44-.65a2.2 2.2 0 0 0-.28-2.7l-.72-.72a2.2 2.2 0 0 0-2.7-.28l-.65.44c-.35.24-.8.3-1.2.15-.4-.14-.7-.46-.83-.86l-.24-.75A2.2 2.2 0 0 0 14.02 2H12.9zm.55 8a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <nav class="sidebar-nav">
+    <a href="#" class="sidebar-link active" data-view="home">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3.1L2 11h3v9h6v-6h2v6h6v-9h3L12 3.1z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="#" class="sidebar-link" data-view="trending">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M13 2v8h8L11 22v-8H3l10-12z"/></svg>
+      <span>Trending</span>
+    </a>
+  </nav>
+  <hr class="sidebar-divider">
+  <div class="sidebar-section-title">Explore</div>
+  <nav class="sidebar-nav" id="categoryNav"></nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="chips" id="chips"></div>
+
+  <div id="homeView">
+    <div class="video-grid" id="videoGrid"></div>
+    <div class="loader" id="loader">Loading…</div>
+  </div>
+
+  <div id="watchView" class="watch-view" style="display:none;">
+    <div class="watch-left">
+      <div class="player-wrap">
+        <iframe id="player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <h1 class="watch-title" id="watchTitle"></h1>
+      <div class="watch-meta">
+        <div class="channel-info">
+          <img id="channelThumb" class="channel-thumb" alt="">
+          <div>
+            <div class="channel-name" id="channelName"></div>
+            <div class="channel-subs" id="channelSubs"></div>
+          </div>
+        </div>
+        <div class="watch-stats" id="watchStats"></div>
+      </div>
+      <div class="description-box" id="descriptionBox"></div>
     </div>
+    <div class="watch-right" id="relatedVideos"></div>
+  </div>
+</main>
 
-    <div id="watch-page" class="main-content">
-        <div class="watch-container">
-            <!-- Left: Player + Meta -->
-            <div class="player-column">
-                <div id="player-container">
-                    <div id="video-player"></div>
-                </div>
-                <div class="video-meta">
-                    <h1 id="video-title" style="font-size: 22px; margin: 16px 0 8px;"></h1>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <div id="channel-info" style="display: flex; align-items: center;"></div>
-                        <div>
-                            <button onclick="likeVideo()" style="padding: 10px 20px; background: #272727; border: none; border-radius: 20px; color: white; cursor: pointer;">👍 Like</button>
-                        </div>
-                    </div>
-                    <div id="video-description" style="background: #272727; padding: 16px; border-radius: 12px; white-space: pre-wrap;"></div>
-                </div>
-                <div class="comments">
-                    <h3 style="margin-bottom: 16px;">Comments</h3>
-                    <p>Comments section (demo - real integration would require more API calls)</p>
-                </div>
-            </div>
-
-            <!-- Right: Up Next -->
-            <div class="up-next-column">
-                <h3 style="margin-bottom: 16px; padding-left: 4px;">Up next</h3>
-                <div id="up-next"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const API_KEY = 'AIzaSyA-prNvVFEqlhVDePlrmPd6RGC-JMpt04Q';
-
-        let currentPlayer = null;
-
-        window.onYouTubeIframeAPIReady = function() {
-            console.log('YouTube Player API ready');
-        };
-
-        async function fetchVideos(query = '') {
-            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&type=video&q=${encodeURIComponent(query || 'popular')}&key=${API_KEY}`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('API error');
-                const data = await response.json();
-                return data.items || [];
-            } catch (e) {
-                console.error(e);
-                alert('Failed to fetch videos. Check API key.');
-                return [];
-            }
-        }
-
-        function displayVideos(videos, containerId = 'video-grid', isUpNext = false) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            videos.forEach(video => {
-                const videoId = video.id.videoId || video.id;
-                if (isUpNext) {
-                    // Compact up-next style
-                    const card = document.createElement('div');
-                    card.className = 'up-next-card';
-                    card.innerHTML = `
-                        <div class="up-next-thumbnail">
-                            <img src="${video.snippet.thumbnails.medium.url}" alt="${video.snippet.title}">
-                        </div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 14px; line-height: 1.3; margin-bottom: 4px;">${video.snippet.title}</div>
-                            <div style="font-size: 13px; color: #aaa;">${video.snippet.channelTitle}</div>
-                        </div>
-                    `;
-                    card.onclick = () => watchVideo(videoId, video.snippet);
-                    container.appendChild(card);
-                } else {
-                    // Home grid style
-                    const card = document.createElement('div');
-                    card.className = 'video-card';
-                    card.innerHTML = `
-                        <div class="thumbnail">
-                            <img src="${video.snippet.thumbnails.medium.url}" alt="${video.snippet.title}">
-                            <div class="duration">4:20</div>
-                        </div>
-                        <div class="video-info">
-                            <div class="channel-avatar"></div>
-                            <div class="video-details">
-                                <div class="video-title">${video.snippet.title}</div>
-                                <div class="channel-name">${video.snippet.channelTitle}</div>
-                                <div class="meta">1M views • ${new Date(video.snippet.publishedAt).toLocaleDateString()}</div>
-                            </div>
-                        </div>
-                    `;
-                    card.onclick = () => watchVideo(videoId, video.snippet);
-                    container.appendChild(card);
-                }
-            });
-        }
-
-        async function searchVideos() {
-            const query = document.getElementById('search-input').value.trim();
-            const videos = await fetchVideos(query);
-            displayVideos(videos);
-            showHome();
-        }
-
-        function watchVideo(videoId, snippet) {
-            document.getElementById('home-page').style.display = 'none';
-            const watchPage = document.getElementById('watch-page');
-            watchPage.style.display = 'block';
-
-            if (currentPlayer) {
-                currentPlayer.loadVideoById(videoId);
-            } else {
-                currentPlayer = new YT.Player('video-player', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: videoId,
-                    playerVars: { 'autoplay': 1, 'rel': 0, 'modestbranding': 1 }
-                });
-            }
-
-            document.getElementById('video-title').textContent = snippet.title;
-            document.getElementById('channel-info').innerHTML = `
-                <div style="display: flex; align-items: center;">
-                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #666; margin-right: 12px;"></div>
-                    <div>
-                        <div style="font-weight: 500;">${snippet.channelTitle}</div>
-                        <div style="color: #aaa; font-size: 14px;">1M subscribers</div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('video-description').textContent = snippet.description || 'No description available.';
-
-            // Load up next
-            fetchVideos(snippet.title.substring(0, 50)).then(upNext => {
-                displayVideos(upNext.slice(0, 8), 'up-next', true);
-            });
-        }
-
-        function showHome() {
-            document.getElementById('watch-page').style.display = 'none';
-            document.getElementById('home-page').style.display = 'block';
-        }
-
-        function likeVideo() {
-            alert('Liked! (demo)');
-        }
-
-        async function init() {
-            if (API_KEY === 'AIzaSyA-prNvVFEqlhVDePlrmPd6RGC-JMpt04Q') {
-                alert('Please replace YOUR_API_KEY_HERE with your real YouTube Data API key!');
-                return;
-            }
-            const videos = await fetchVideos('');
-            displayVideos(videos);
-        }
-
-        window.onload = init;
-    </script>
+<script src="app.js"></script>
 </body>
 </html>
