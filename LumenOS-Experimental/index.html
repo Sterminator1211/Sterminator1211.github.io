@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LumenOS</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ==========================================================
+BOOT
+=========================================================== -->
+
+<div id="bootScreen">
+
+    <div id="bootLogo">
+
+        <div id="bootDot"></div>
+
+        <h1>LUMEN</h1>
+
+    </div>
+
+    <div id="bootBar">
+
+        <div id="bootProgress"></div>
+
+    </div>
+
+    <p>Starting LumenOS...</p>
+
+</div>
+
+<!-- ==========================================================
+BACKGROUND EFFECTS
+=========================================================== -->
+
+<div id="backgroundGlow"></div>
+
+<div id="backgroundGradient"></div>
+
+<!-- ==========================================================
+SYSTEM
+=========================================================== -->
+
+<div id="system">
+
+<header id="topBar">
+
+<div class="brand">
+
+<div class="brandDot"></div>
+
+<span>LUMEN OS</span>
+
+</div>
+
+<nav id="navigation">
+
+<button data-tab="home">
+Home
+</button>
+
+<button data-tab="apps">
+Apps
+</button>
+
+<button data-tab="live">
+Live TV
+</button>
+
+<button data-tab="inputs">
+Inputs
+</button>
+
+<button data-tab="settings">
+Settings
+</button>
+
+</nav>
+
+<div id="statusBar">
+
+<div id="wifiStatus"></div>
+
+<div id="bluetoothStatus"></div>
+
+<div id="time"></div>
+
+</div>
+
+</header>
+
+<!-- ==========================================================
+HOME
+=========================================================== -->
+
+<main id="homeScreen">
+
+<section id="hero">
+
+<div id="heroBackground"></div>
+
+<div id="heroContent">
+
+<span class="heroCategory">
+
+FEATURED
+
+</span>
+
+<h1 id="heroTitle">
+
+Loading...
+
+</h1>
+
+<p id="heroDescription">
+
+Loading...
+
+</p>
+
+<button id="watchButton">
+
+Watch Now
+
+</button>
+
+</div>
+
+</section>
+
+<section class="row">
+
+<h2>
+
+Continue Watching
+
+</h2>
+
+<div
+id="continueWatching"
+class="horizontalRow">
+
+</div>
+
+</section>
+
+<section class="row">
+
+<h2>
+
+Apps
+
+</h2>
+
+<div
+id="appsRow"
+class="horizontalRow">
+
+</div>
+
+</section>
+
+<section class="row">
+
+<h2>
+
+Inputs
+
+</h2>
+
+<div
+id="inputsRow"
+class="horizontalRow">
+
+</div>
+
+</section>
+
+<section class="row">
+
+<h2>
+
+Recommended
+
+</h2>
+
+<div
+id="recommendedRow"
+class="horizontalRow">
+
+</div>
+
+</section>
+
+</main>
+
+<!-- ==========================================================
+SEARCH
+=========================================================== -->
+
+<div
+id="searchOverlay"
+class="overlay hidden">
+
+<div class="overlayWindow">
+
+<input
+id="searchInput"
+placeholder="Search movies, apps and settings...">
+
+<div id="searchResults">
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ==========================================================
+APP
+=========================================================== -->
+
+<div
+id="appOverlay"
+class="overlay hidden">
+
+<header class="appHeader">
+
+<h1 id="appTitle">
+
+App
+
+</h1>
+
+<button id="closeApp">
+
+Back
+
+</button>
+
+</header>
+
+<div id="appContent">
+
+</div>
+
+</div>
+
+<!-- ==========================================================
+INPUT
+=========================================================== -->
+
+<div
+id="inputOverlay"
+class="overlay hidden">
+
+<h1 id="inputName">
+
+HDMI
+
+</h1>
+
+<p id="inputStatus">
+
+Searching for signal...
+
+</p>
+
+<button id="leaveInput">
+
+Back
+
+</button>
+
+</div>
+
+<!-- ==========================================================
+SETTINGS
+=========================================================== -->
+
+<div
+id="settingsOverlay"
+class="overlay hidden">
+
+<aside id="settingsSidebar">
+
+</aside>
+
+<section id="settingsContent">
+
+</section>
+
+</div>
+
+<!-- ==========================================================
+NOTIFICATIONS
+=========================================================== -->
+
+<div id="notificationContainer">
+
+</div>
+
+<!-- ==========================================================
+UPDATE
+=========================================================== -->
+
+<div
+id="updateOverlay"
+class="overlay hidden">
+
+<h1>
+
+Software Update
+
+</h1>
+
+<p>
+
+Checking for updates...
+
+</p>
+
+<div id="updateProgress">
+
+<div id="updateFill">
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ==========================================================
+SCREENSAVER
+=========================================================== -->
+
+<div
+id="screenSaver"
+class="hidden">
+
+<div id="screenSaverClock">
+
+00:00
+
+</div>
+
+</div>
+
+<!-- ==========================================================
+FOOTER
+=========================================================== -->
+
+<footer id="footerHints">
+
+<div>
+
+⬅➡ Move
+
+</div>
+
+<div>
+
+▲▼ Navigate
+
+</div>
+
+<div>
+
+Enter Select
+
+</div>
+
+<div>
+
+Back Return
+
+</div>
+
+</footer>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
