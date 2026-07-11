@@ -29,6 +29,23 @@
         header { text-align: center; margin-bottom: 40px; width: 100%; max-width: 800px; }
         h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 10px; text-shadow: 0 4px 8px rgba(0,0,0,0.3); letter-spacing: -2px; }
         .subtitle { font-size: 1.3rem; opacity: 0.95; }
+
+        /* Clickable "Directories" word */
+        .directories-toggle {
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+        .directories-toggle:hover { opacity: 0.75; }
+        .directories-toggle.expanded {
+            font-weight: 700;
+        }
+
+        .mode-indicator {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 6px;
+            min-height: 1.2em;
+        }
         
         .container {
             width: 100%;
@@ -56,6 +73,10 @@
         .button-wrapper:hover {
             transform: translateY(-4px);
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .button-wrapper.extra {
+            border-color: rgba(255, 255, 255, 0.6);
         }
 
         .main-btn, .sub-link {
@@ -127,7 +148,8 @@
 <body>
     <header>
         <h1>Homepage</h1>
-        <p class="subtitle">Quick Links Directory</p>
+        <p class="subtitle">Quick Links <span id="directoriesToggle" class="directories-toggle">Directories</span></p>
+        <p id="modeIndicator" class="mode-indicator"></p>
     </header>
     
     <div class="container">
@@ -136,20 +158,22 @@
     </div>
 
     <script>
-        async function loadDirectories() {
-            const container = document.getElementById('buttons-container');
-            const loading = document.getElementById('loading');
-            
-            try {
-                const response = await fetch('directories.json');
-                const directories = await response.json();
-                
-                loading.style.display = 'none';
-                container.innerHTML = '';
-                
-                directories.forEach(([title, data]) => {
+        let baseDirectories = null;   // contents of directories.json
+        let extraDirectories = null;  // contents of h-directories.json (fetched lazily)
+        let showExtra = false;        // current view state
+
+        const container = document.getElementById('buttons-container');
+        const loading = document.getElementById('loading');
+        const toggleEl = document.getElementById('directoriesToggle');
+        const modeIndicator = document.getElementById('modeIndicator');
+
+        function renderDirectories(baseList, extraList) {
+            container.innerHTML = '';
+
+            const renderList = (list, isExtra) => {
+                list.forEach(([title, data]) => {
                     const wrapper = document.createElement('div');
-                    wrapper.className = 'button-wrapper';
+                    wrapper.className = 'button-wrapper' + (isExtra ? ' extra' : '');
 
                     // If data is a string, it's a standard link
                     if (typeof data === 'string') {
@@ -160,17 +184,16 @@
                         link.target = '_blank';
                         link.rel = 'noopener noreferrer';
                         wrapper.appendChild(link);
-                    } 
+                    }
                     // If data is an object (Curly Brackets {}), it's a multi-link
                     else {
                         const mainBtn = document.createElement('button');
                         mainBtn.className = 'main-btn has-sub';
                         mainBtn.textContent = title;
-                        
+
                         const subContainer = document.createElement('div');
                         subContainer.className = 'sub-links-container';
 
-                        // Logic for Curly Bracket objects
                         Object.entries(data).forEach(([subTitle, url]) => {
                             const subLink = document.createElement('a');
                             subLink.href = url;
@@ -182,19 +205,78 @@
                         });
 
                         mainBtn.onclick = () => wrapper.classList.add('active');
-                        
+
                         wrapper.appendChild(mainBtn);
                         wrapper.appendChild(subContainer);
                     }
-                    
+
                     container.appendChild(wrapper);
                 });
-            } catch (error) {
-                loading.innerHTML = `<strong>Error loading directories.json</strong>`;
+            };
+
+            renderList(baseList, false);
+            if (extraList) {
+                renderList(extraList, true);
             }
         }
-        
-        window.addEventListener('load', loadDirectories);
+
+        function updateModeIndicator() {
+            modeIndicator.textContent = showExtra
+                ? '(showing expanded list — click "Directories" to collapse)'
+                : '';
+            toggleEl.classList.toggle('expanded', showExtra);
+        }
+
+        async function loadBaseDirectories() {
+            const response = await fetch('directories.json');
+            if (!response.ok) throw new Error('Failed to load directories.json');
+            return response.json();
+        }
+
+        async function loadExtraDirectories() {
+            const response = await fetch('h-directories.json');
+            if (!response.ok) throw new Error('Failed to load h-directories.json');
+            return response.json();
+        }
+
+        async function init() {
+            try {
+                baseDirectories = await loadBaseDirectories();
+                loading.style.display = 'none';
+                renderDirectories(baseDirectories, null);
+            } catch (error) {
+                loading.innerHTML = `<strong>Error loading directories.json</strong>`;
+                return;
+            }
+
+            toggleEl.addEventListener('click', async () => {
+                showExtra = !showExtra;
+
+                if (showExtra) {
+                    // Lazily fetch the extra json only once
+                    if (extraDirectories === null) {
+                        toggleEl.style.opacity = '0.5';
+                        try {
+                            extraDirectories = await loadExtraDirectories();
+                        } catch (error) {
+                            extraDirectories = [];
+                            modeIndicator.textContent = 'Error loading h-directories.json';
+                            toggleEl.style.opacity = '1';
+                            showExtra = false;
+                            return;
+                        }
+                        toggleEl.style.opacity = '1';
+                    }
+                    renderDirectories(baseDirectories, extraDirectories);
+                } else {
+                    renderDirectories(baseDirectories, null);
+                }
+
+                updateModeIndicator();
+            });
+        }
+
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>
