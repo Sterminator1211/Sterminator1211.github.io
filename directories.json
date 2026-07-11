@@ -3,6 +3,10 @@
         "Stable": "https://sterminator1211.github.io/NovaOS-Stable/",
         "Experimental": "https://sterminator1211.github.io/NovaOS-Experimental/"
     }],
+    ["AsterOS", {
+        "Stable": "https://sterminator1211.github.io/AsterOS-Stable/",
+        "Experimental (!Not avaliable)": "https://sterminator1211.github.io/AsterOS-Stable/"
+    }],
     ["Chess", {
         "Multiplayer (Same Device)": "https://sterminator1211.github.io/Chess/",
         "Hard AI": "https://sterminator1211.github.io/Chess/bot-46c84640-4f20-423a-9305-7e3b10ae0fa6/hindex.html",
