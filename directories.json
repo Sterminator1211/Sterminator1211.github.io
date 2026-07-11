@@ -1,9 +1,9 @@
 [
-    ["NovaOS (for Laptops/Desktops", {
+    ["NovaOS (for Laptops/Desktops)", {
         "Stable": "https://sterminator1211.github.io/NovaOS-Stable/",
         "Experimental": "https://sterminator1211.github.io/NovaOS-Experimental/"
     }],
-    ["AsterOS (for Phones/Tablets", {
+    ["AsterOS (for Phones/Tablets)", {
         "Stable": "https://sterminator1211.github.io/AsterOS-Stable/",
         "Experimental": "https://sterminator1211.github.io/AsterOS-Experimental/"
     }],
