@@ -51,15 +51,36 @@ export async function getFile(path: string) {
             ).toString("utf8")
         );
 
-    } catch (err: any) {
+    catch (error: any) {
 
-        if (err.status === 404) {
-            return null;
+    console.error("UPLOAD ERROR:", error);
+
+    return res.status(500).json({
+        error: "Upload failed",
+
+        debug: {
+            message: error?.message,
+            status: error?.status,
+
+            githubResponse:
+                error?.response?.data,
+
+            request:
+                error?.request?.options,
+
+            stack:
+                error?.stack
+        },
+
+        environment: {
+            owner: process.env.IODS_GH_OWNER,
+            repo: process.env.IODS_GH_REPO,
+            branch: process.env.IODS_GH_BRANCH,
+            dataDir: process.env.IODS_DATA_DIR
         }
+    });
 
-        throw err;
-
-    }
+}
 
 }
 
