@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aster OS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --ink:        #0A0C10;
+  --surface:    #14171D;
+  --surface-2:  #1C2028;
+  --coral:      #FF6B4A;
+  --periwinkle: #6C8EFF;
+  --mint:       #4ADE9C;
+  --text:       #F5F3EE;
+  --text-muted: #8A8F98;
+  --hairline:   rgba(245,243,238,0.09);
+  --phone-w: 375px;
+  --phone-h: 812px;
+  --ipad-w: 1133px;
+  --ipad-h: 744px;
+}
+
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; user-select:none;}
+
+html, body{ height:100%; }
+body{
+  background: var(--ink);
+  font-family:'Inter', sans-serif;
+  color: var(--text);
+  display:flex; align-items:center; justify-content:center;
+  overflow:auto;
+}
+
+/* ============ OS VIEWPORT ============
+   The OS fills the actual browser viewport by default (phone models),
+   since on an actual phone that viewport IS the phone screen. The iPad
+   Mini model instead locks in a fixed landscape canvas — a tablet isn't
+   the same shape as the browser window it's being viewed in, so it gets
+   real dimensions and the page scrolls/centers around it. */
+.screen{
+  position:relative;
+  width: 100%;
+  height: 100dvh;
+  max-width: var(--phone-w);
+  flex-shrink:0;
+  background: var(--ink);
+  overflow:hidden;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+}
+.screen.device-ipad-mini{
+  width: var(--ipad-w);
+  height: var(--ipad-h);
+  max-width: var(--ipad-w);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* ============ DEVICE MODEL PROFILES ============
+   No notch is drawn. Instead, the top safe-area spacing scales to
+   match what each device would reserve for its sensor housing, so the
+   status bar content sits exactly where it would on the real device. */
+.screen.device-iphone13{ --status-h: 46px; --top-safe: 20px; }
+.screen.device-other{ --status-h: 28px; --top-safe: 7px; }
+.screen.device-ipad-mini{ --status-h: 34px; --top-safe: 10px; }
+
+/* iPad Mini (landscape) gets a roomier, tablet-scale home screen */
+.screen.device-ipad-mini .app-grid{ grid-template-columns: repeat(8, 1fr); gap: 30px 0; padding: 20px 46px 0 46px; }
+.screen.device-ipad-mini .app-icon{ width:72px; height:72px; font-size:32px; border-radius:19px; }
+.screen.device-ipad-mini .app-label{ font-size:13px; }
+.screen.device-ipad-mini .dock{ height:98px; border-radius:32px; left:26px; right:26px; bottom:26px; }
+.screen.device-ipad-mini .dock .app-icon{ width:62px; height:62px; font-size:27px; }
+.screen.device-ipad-mini .lock-time{ font-size:104px; }
+.screen.device-ipad-mini .lock-widgets{ width:46%; }
+.screen.device-ipad-mini .app-content{ padding: 22px 60px 32px 60px; }
+
+/* ============ STATUS BAR ============ */
+.status-bar{
+  position:absolute; top:0; left:0; right:0; height: var(--status-h, 46px);
+  display:flex; align-items:center; justify-content:space-between;
+  padding: var(--top-safe, 12px) 26px 0 26px; z-index:90;
+  font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:600;
+  transition: height .25s ease, padding .25s ease;
+}
+.status-bar .clock-time{ min-width:44px; }
+.status-icons{ display:flex; align-items:center; gap:6px; }
+.status-icons svg{ display:block; }
+
+/* ============ LOCK SCREEN ============ */
+.lock-screen{
+  position:absolute; inset:0; z-index:80;
+  display:flex; flex-direction:column; align-items:center;
+  padding-top: calc(var(--status-h, 46px) + 44px);
+  transition: padding-top .25s ease, transform .45s cubic-bezier(.22,.9,.3,1), opacity .4s ease;
+  background:
+    linear-gradient(180deg, rgba(10,12,16,0) 0%, rgba(10,12,16,0.35) 60%, rgba(10,12,16,0.85) 100%),
+    var(--lock-gradient, linear-gradient(160deg, #1a2140, #3a2440 55%, #201622));
+}
+.lock-screen.hidden{ transform: translateY(-100%); opacity:0; pointer-events:none; }
+.lock-time{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:74px; letter-spacing:-2px; line-height:1;}
+.lock-date{ font-family:'Inter'; font-weight:500; font-size:15px; color:var(--text-muted); margin-top:10px; }
+.lock-widgets{ margin-top:34px; display:flex; flex-direction:column; gap:10px; width:80%; }
+.lock-widget{
+  background:rgba(255,255,255,0.08); backdrop-filter: blur(14px);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:18px; padding:12px 16px; display:flex; align-items:center; gap:12px;
+  font-size:13px; color:var(--text);
+}
+.lock-widget .dot{ width:8px; height:8px; border-radius:50%; background:var(--mint); flex-shrink:0; }
+.lock-bottom{
+  position:absolute; bottom:34px; left:0; right:0;
+  display:flex; flex-direction:column; align-items:center; gap:16px;
+}
+.lock-hint{ font-size:12px; color:var(--text-muted); letter-spacing:0.04em; }
+.lock-swipe-btn{
+  width:52px; height:52px; border-radius:50%;
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.14);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  animation: bob 2.2s ease-in-out infinite;
+}
+@keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+.lock-shortcuts{ position:absolute; bottom:34px; left:26px; right:26px; display:flex; justify-content:space-between; }
+.lock-shortcut{
+  width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:19px;
+}
+
+/* ============ HOME SCREEN ============ */
+.home-screen{
+  position:absolute; inset:0;
+  background: linear-gradient(165deg, #171b24 0%, #0d0f14 55%, #1a1420 100%);
+  padding-top: calc(var(--status-h, 46px) + 12px);
+  transition: padding-top .25s ease;
+}
+.app-grid{
+  display:grid; grid-template-columns: repeat(4, 1fr);
+  gap: 22px 0; padding: 18px 22px 0 22px;
+}
+.app-icon-wrap{ display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer; }
+.app-icon{
+  width:58px; height:58px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+  box-shadow: 0 6px 14px -4px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.12) inset;
+  transition: transform .15s ease;
+}
+.app-icon-wrap:active .app-icon{ transform: scale(0.88); }
+.app-label{ font-size:11.5px; color:var(--text); font-weight:500; text-shadow:0 1px 3px rgba(0,0,0,0.5); }
+
+.page-dots{ display:flex; justify-content:center; gap:6px; margin-top:22px; }
+.page-dots span{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.25); }
+.page-dots span.active{ background:rgba(255,255,255,0.85); }
+
+.dock{
+  position:absolute; bottom:22px; left:14px; right:14px; height:84px;
+  background:rgba(255,255,255,0.07); backdrop-filter: blur(20px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:28px; display:flex; align-items:center; justify-content:space-around; padding:0 8px;
+}
+
+/* ============ APP SCREEN ============ */
+.app-screen{
+  position:absolute; inset:0; z-index:60; background:var(--surface);
+  transform: scale(0.85); opacity:0; pointer-events:none;
+  transform-origin: center 65%;
+  transition: transform .32s cubic-bezier(.2,.9,.25,1), opacity .28s ease;
+}
+.app-screen.open{ transform:scale(1); opacity:1; pointer-events:auto; }
+.app-header{
+  position:absolute; top:0; left:0; right:0; height:92px; z-index:20;
+  display:flex; align-items:flex-end; padding: 0 18px 14px 18px;
+  background: var(--app-header-bg, var(--surface));
+  border-bottom: 1px solid var(--hairline);
+}
+.app-back{
+  width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,0.06);
+  display:flex; align-items:center; justify-content:center; margin-right:12px; cursor:pointer; flex-shrink:0;
+}
+.app-title{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:19px; }
+.app-content{
+  position:absolute; top:92px; left:0; right:0; bottom:34px; overflow-y:auto;
+  padding: 18px 18px 24px 18px;
+}
+.app-content::-webkit-scrollbar{ display:none; }
+
+/* ============ HOME INDICATOR ============ */
+.home-indicator{
+  position:absolute; bottom:8px; left:50%; transform:translateX(-50%); z-index:200;
+  width:134px; height:5px; border-radius:3px; background:rgba(255,255,255,0.55);
+  cursor:pointer;
+}
+
+/* ============ SHARED UI KIT ============ */
+.card{ background:var(--surface-2); border-radius:18px; padding:16px; border:1px solid var(--hairline); }
+.row{ display:flex; align-items:center; justify-content:space-between; padding:14px 4px; border-bottom:1px solid var(--hairline); }
+.row:last-child{ border-bottom:none; }
+.row-label{ font-size:15px; font-weight:500; display:flex; align-items:center; gap:10px; }
+.muted{ color:var(--text-muted); font-size:13px; }
+.section-title{ font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin: 22px 4px 8px 4px; font-weight:600; }
+.section-title:first-child{ margin-top:0; }
+
+.toggle{ width:46px; height:27px; border-radius:20px; background:#33363f; position:relative; cursor:pointer; transition:background .2s; flex-shrink:0; }
+.toggle.on{ background:var(--mint); }
+.toggle::after{ content:''; position:absolute; top:2.5px; left:2.5px; width:22px; height:22px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+.toggle.on::after{ left:21.5px; }
+
+.btn{ font-family:'Inter'; font-weight:600; font-size:14px; padding:11px 18px; border-radius:14px; border:none; cursor:pointer; }
+.btn-primary{ background:var(--coral); color:#1a0e08; }
+.btn-secondary{ background:rgba(255,255,255,0.09); color:var(--text); }
+.btn-block{ width:100%; }
+
+/* Calculator */
+.calc-display{ text-align:right; font-family:'Space Grotesk'; font-size:52px; font-weight:600; padding: 30px 10px 20px 10px; word-break:break-all; }
+/* Row height is pinned to column width (not each button's own width),
+   so the double-wide "0" key doesn't inherit double height like a
+   naive aspect-ratio:1 would give it — it stays a pill, not an oval. */
+.calc-grid{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  grid-auto-rows: calc((100% - 36px) / 4);
+  gap:12px;
+}
+.calc-btn{
+  width:100%; height:100%; border-radius:50%; border:none; font-size:22px; font-weight:600;
+  background:var(--surface-2); color:var(--text); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.calc-btn.op{ background:var(--coral); color:#1a0e08; }
+.calc-btn.fn{ background:#3a3d46; }
+.calc-btn.zero{ grid-column: span 2; border-radius:999px; justify-content:flex-start; padding-left:28px; }
+
+/* Notes */
+.note-item{ background:var(--surface-2); border-radius:14px; padding:14px; margin-bottom:10px; border:1px solid var(--hairline); }
+.note-item textarea{ display:none; }
+.note-text{ font-size:14px; line-height:1.5; white-space:pre-wrap; }
+.note-meta{ font-size:11px; color:var(--text-muted); margin-top:8px; display:flex; justify-content:space-between; }
+.note-del{ color:var(--coral); cursor:pointer; }
+.new-note-box{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+.new-note-box textarea{
+  background:var(--surface-2); border:1px solid var(--hairline); border-radius:14px; color:var(--text);
+  padding:12px; font-family:'Inter'; font-size:14px; resize:none; min-height:70px;
+}
+
+/* Clock */
+.clock-big{ text-align:center; padding: 30px 0; }
+.clock-big .digits{ font-family:'Space Grotesk'; font-size:56px; font-weight:600; letter-spacing:-1px; }
+.stopwatch-row{ display:flex; gap:10px; margin-top:18px; }
+
+/* Weather */
+.weather-hero{ text-align:center; padding: 22px 0 30px 0; }
+.weather-hero .temp{ font-family:'Space Grotesk'; font-size:72px; font-weight:600; }
+.weather-city-list .row{ cursor:pointer; }
+
+/* Camera */
+.camera-view{
+  position:relative; width:100%; aspect-ratio:3/4; border-radius:24px; overflow:hidden;
+  background: linear-gradient(160deg,#232733,#0f1117); display:flex; align-items:center; justify-content:center;
+}
+.camera-view video{ width:100%; height:100%; object-fit:cover; }
+.camera-fallback{ color:var(--text-muted); font-size:13px; text-align:center; padding:20px; }
+.shutter-wrap{ display:flex; justify-content:center; margin-top:26px; }
+.shutter{ width:70px; height:70px; border-radius:50%; border:4px solid rgba(255,255,255,0.5); background:#fff; cursor:pointer; }
+.thumb-strip{ display:flex; gap:8px; margin-top:16px; overflow-x:auto; }
+.thumb{ width:52px; height:52px; border-radius:10px; flex-shrink:0; border:1px solid var(--hairline); }
+
+/* Music */
+.disc{
+  width:190px; height:190px; border-radius:50%; margin: 10px auto 24px auto;
+  background: conic-gradient(from 90deg, var(--coral), var(--periwinkle), var(--mint), var(--coral));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 20px 40px -12px rgba(0,0,0,0.6);
+}
+.disc::after{ content:''; width:56px; height:56px; border-radius:50%; background:var(--ink); }
+.disc.spin{ animation: spin 6s linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+.track-title{ text-align:center; font-family:'Space Grotesk'; font-weight:600; font-size:18px; margin-top:4px;}
+.track-artist{ text-align:center; color:var(--text-muted); font-size:13px; margin-top:4px; }
+.progress-bar{ height:4px; background:var(--surface-2); border-radius:2px; margin:22px 4px 8px 4px; overflow:hidden; }
+.progress-fill{ height:100%; background:var(--coral); width:0%; }
+.player-controls{ display:flex; justify-content:center; align-items:center; gap:26px; margin-top:14px; }
+.player-controls .play-btn{ width:58px; height:58px; border-radius:50%; background:var(--text); color:var(--ink); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; }
+.track-list-item{ display:flex; align-items:center; gap:12px; padding:10px 4px; cursor:pointer; }
+.track-list-item .swatch{ width:40px; height:40px; border-radius:10px; flex-shrink:0; }
+
+/* Phone / dialer */
+.dial-display{ text-align:center; font-family:'Space Grotesk'; font-size:34px; font-weight:600; padding: 20px 0 26px 0; min-height:44px; }
+.dial-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.dial-btn{ aspect-ratio:1; border-radius:50%; background:var(--surface-2); border:none; color:var(--text); font-size:22px; font-weight:600; cursor:pointer; }
+.call-btn{ width:64px; height:64px; border-radius:50%; background:var(--mint); border:none; margin:22px auto 0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; }
+
+/* Messages */
+.msg-thread-item{ display:flex; gap:12px; padding:12px 4px; border-bottom:1px solid var(--hairline); cursor:pointer; }
+.msg-avatar{ width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px;}
+.bubble{ max-width:75%; padding:10px 14px; border-radius:16px; font-size:14px; margin-bottom:8px; line-height:1.4; }
+.bubble.them{ background:var(--surface-2); border-bottom-left-radius:4px; }
+.bubble.me{ background:var(--periwinkle); color:#0d1020; margin-left:auto; border-bottom-right-radius:4px; }
+
+/* Gallery */
+.gallery-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.gallery-tile{ aspect-ratio:1; border-radius:6px; cursor:pointer; }
+
+/* placeholder */
+.placeholder-app{ display:flex; flex-direction:column; align-items:center; justify-content:center; height:60%; text-align:center; gap:10px; }
+.placeholder-app .glyph{ font-size:44px; }
+
+.brightness-slider{ width:100%; accent-color: var(--coral); }
+
+.model-select{
+  background:var(--surface); color:var(--text); border:1px solid var(--hairline);
+  border-radius:10px; padding:7px 10px; font-family:'Inter'; font-size:13.5px; font-weight:500;
+  cursor:pointer;
+}
+
+/* Browser */
+.browser-app{ display:flex; flex-direction:column; height:100%; margin: -18px -18px 0 -18px; }
+.browser-bar{ display:flex; gap:8px; padding:0 18px 12px 18px; }
+.browser-bar input{
+  flex:1; background:var(--surface-2); border:1px solid var(--hairline); border-radius:12px;
+  color:var(--text); padding:10px 14px; font-family:'Inter'; font-size:14px;
+}
+.browser-bar button{ flex-shrink:0; }
+.browser-note{ font-size:11px; color:var(--text-muted); padding: 0 18px 10px 18px; line-height:1.4; }
+.browser-frame-wrap{ flex:1; padding: 0 18px 18px 18px; }
+.browser-frame-wrap iframe{
+  width:100%; height:100%; border:none; border-radius:16px; background:#fff;
+}
+</style>
+</head>
+<body>
+
+  <div class="screen device-iphone13" id="screen">
+
+    <div class="status-bar">
+      <div class="clock-time" id="statusClock">9:41</div>
+      <div class="status-icons">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="0.5" fill="#F5F3EE"/><rect x="4.5" y="5" width="3" height="6" rx="0.5" fill="#F5F3EE"/><rect x="9" y="3" width="3" height="8" rx="0.5" fill="#F5F3EE"/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill="#F5F3EE"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 10.5C8.55 10.5 9 10.05 9 9.5C9 8.95 8.55 8.5 8 8.5C7.45 8.5 7 8.95 7 9.5C7 10.05 7.45 10.5 8 10.5Z" fill="#F5F3EE"/><path d="M5 7.3C5.8 6.5 6.85 6 8 6C9.15 6 10.2 6.5 11 7.3" stroke="#F5F3EE" stroke-width="1.3" stroke-linecap="round"/><path d="M2.3 4.6C4 2.9 5.9 2 8 2C10.1 2 12 2.9 13.7 4.6" stroke="#F5F3EE" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="2.5" stroke="#F5F3EE" stroke-opacity="0.5" stroke-width="1"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.3" fill="#F5F3EE" id="battFill"/><rect x="22" y="4" width="1.6" height="4" rx="0.8" fill="#F5F3EE" opacity="0.5"/></svg>
+      </div>
+    </div>
+
+    <!-- LOCK SCREEN -->
+    <div class="lock-screen" id="lockScreen">
+      <div class="lock-time" id="lockClock">9:41</div>
+      <div class="lock-date" id="lockDate">Friday, July 10</div>
+      <div class="lock-widgets">
+        <div class="lock-widget"><span class="dot"></span> Notes — "Pick up circuit board pieces"</div>
+        <div class="lock-widget"><span class="dot" style="background:var(--periwinkle)"></span> Weather — 84° and clear, Oklahoma City</div>
+      </div>
+      <div class="lock-shortcuts">
+        <div class="lock-shortcut">🔦</div>
+        <div class="lock-shortcut">📷</div>
+      </div>
+      <div class="lock-bottom">
+        <div class="lock-hint">swipe up to unlock</div>
+        <div class="lock-swipe-btn" id="unlockBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5L6 11M12 5L18 11" stroke="#F5F3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOME SCREEN -->
+    <div class="home-screen" id="homeScreen">
+      <div class="app-grid" id="appGrid"></div>
+      <div class="page-dots"><span class="active"></span><span></span></div>
+      <div class="dock" id="dock"></div>
+    </div>
+
+    <!-- APP SCREEN (single dynamic screen reused for every app) -->
+    <div class="app-screen" id="appScreen">
+      <div class="app-header">
+        <div class="app-back" id="appBack">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="#F5F3EE" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="app-title" id="appTitle">App</div>
+      </div>
+      <div class="app-content" id="appContent"></div>
+    </div>
+
+    <div class="home-indicator" id="homeIndicator"></div>
+  </div>
+
+<script>
+/* ================= APP REGISTRY ================= */
+const APPS = [
+  { id:'settings', name:'Settings',  glyph:'⚙️', bg:'linear-gradient(160deg,#5b5f6b,#2f323b)' },
+  { id:'calculator', name:'Calculator', glyph:'🧮', bg:'linear-gradient(160deg,#ff8a65,#e6532d)' },
+  { id:'clock', name:'Clock', glyph:'⏰', bg:'linear-gradient(160deg,#232323,#050505)' },
+  { id:'notes', name:'Notes', glyph:'📝', bg:'linear-gradient(160deg,#ffd76a,#e8a93a)' },
+  { id:'weather', name:'Weather', glyph:'☀️', bg:'linear-gradient(160deg,#7db8ff,#3f6fc9)' },
+  { id:'photos', name:'Photos', glyph:'🖼️', bg:'linear-gradient(160deg,#ff9ecb,#c65fa0)' },
+  { id:'browser', name:'Browser', glyph:'🌐', bg:'linear-gradient(160deg,#6ee0ff,#2a6fc9)' },
+  { id:'appstore', name:'App Store', glyph:'🛍️', bg:'linear-gradient(160deg,#6ee0ff,#2a9dc9)' },
+  { id:'files', name:'Files', glyph:'📁', bg:'linear-gradient(160deg,#8fd3a3,#3f9d64)' },
+];
+const DOCK = [
+  { id:'phone', name:'Phone', glyph:'📞', bg:'linear-gradient(160deg,#7ee08a,#31b04a)' },
+  { id:'messages', name:'Messages', glyph:'💬', bg:'linear-gradient(160deg,#8fe0ff,#2f9fe0)' },
+  { id:'camera', name:'Camera', glyph:'📷', bg:'linear-gradient(160deg,#4b4f58,#1c1e23)' },
+  { id:'music', name:'Music', glyph:'🎵', bg:'linear-gradient(160deg,#ff7d9c,#e0355f)' },
+];
+
+const el = id => document.getElementById(id);
+const grid = el('appGrid'), dock = el('dock');
+
+function iconNode(app){
+  const wrap = document.createElement('div');
+  wrap.className = 'app-icon-wrap';
+  wrap.innerHTML = `<div class="app-icon" style="background:${app.bg}">${app.glyph}</div><div class="app-label">${app.name}</div>`;
+  wrap.addEventListener('click', () => openApp(app.id));
+  return wrap;
+}
+APPS.forEach(a => grid.appendChild(iconNode(a)));
+DOCK.forEach(a => {
+  const wrap = document.createElement('div');
+  wrap.className = 'app-icon-wrap';
+  wrap.innerHTML = `<div class="app-icon" style="background:${a.bg}; width:52px; height:52px; font-size:23px;">${a.glyph}</div>`;
+  wrap.addEventListener('click', () => openApp(a.id));
+  dock.appendChild(wrap);
+});
+
+/* ================= CLOCK / STATUS BAR ================= */
+function pad(n){ return n.toString().padStart(2,'0'); }
+function updateClocks(){
+  const now = new Date();
+  let h = now.getHours(); const m = pad(now.getMinutes());
+  const timeStr = `${h % 12 === 0 ? 12 : h % 12}:${m}`;
+  el('statusClock').textContent = timeStr;
+  el('lockClock').textContent = timeStr;
+  el('lockDate').textContent = now.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  const cd = el('clockAppDigits'); if(cd){ cd.textContent = `${pad(h)}:${m}:${pad(now.getSeconds())}`; }
+}
+updateClocks(); setInterval(updateClocks, 1000);
+
+/* ================= LOCK SCREEN ================= */
+const lockScreen = el('lockScreen');
+function unlock(){ lockScreen.classList.add('hidden'); }
+el('unlockBtn').addEventListener('click', unlock);
+lockScreen.addEventListener('click', (e) => { if(e.target === lockScreen) unlock(); });
+let touchStartY = null;
+lockScreen.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
+lockScreen.addEventListener('touchend', e => {
+  if(touchStartY !== null && touchStartY - e.changedTouches[0].clientY > 60) unlock();
+});
+
+/* ================= APP ROUTER ================= */
+const appScreen = el('appScreen'), appContent = el('appContent'), appTitle = el('appTitle');
+function openApp(id){
+  const meta = [...APPS, ...DOCK].find(a => a.id === id);
+  appTitle.textContent = meta ? meta.name : 'App';
+  appContent.innerHTML = '';
+  (RENDERERS[id] || RENDERERS.placeholder)(appContent, meta);
+  appScreen.classList.add('open');
+}
+function closeApp(){
+  appScreen.classList.remove('open');
+  stopCamera(); stopMusic();
+}
+el('appBack').addEventListener('click', closeApp);
+el('homeIndicator').addEventListener('click', closeApp);
+
+/* ================= STORAGE HELPERS ================= */
+async function storeGet(key, fallback){
+  try{
+    const r = await window.storage.get(key);
+    return r ? JSON.parse(r.value) : fallback;
+  }catch(e){ return fallback; }
+}
+async function storeSet(key, value){
+  try{ await window.storage.set(key, JSON.stringify(value)); }catch(e){ /* ignore */ }
+}
+
+/* ================= DEVICE MODEL ================= */
+const screenEl = el('screen');
+function applyDeviceModel(model){
+  screenEl.classList.remove('device-iphone13', 'device-other', 'device-ipad-mini');
+  if(model === 'ipad-mini'){
+    screenEl.classList.add('device-ipad-mini');
+  } else {
+    screenEl.classList.add(model === 'other' ? 'device-other' : 'device-iphone13');
+  }
+}
+storeGet('device-model', 'iphone13').then(applyDeviceModel);
+
+/* ================= BRIGHTNESS ================= */
+function applyBrightness(pct){
+  // 10 -> quite dim, 100 -> full native brightness (filter caps at 1;
+  // a backlight can't get physically brighter than "normal" via CSS).
+  const clamped = Math.min(100, Math.max(10, Number(pct) || 70));
+  screenEl.style.filter = `brightness(${(0.18 + (clamped / 100) * 0.82).toFixed(3)})`;
+}
+storeGet('settings', { brightness: 70 }).then(s => applyBrightness(s.brightness));
+
+/* ================= RENDERERS ================= */
+const RENDERERS = {};
+
+RENDERERS.placeholder = (root, meta) => {
+  root.innerHTML = `<div class="placeholder-app">
+    <div class="glyph">${meta ? meta.glyph : '📦'}</div>
+    <div style="font-weight:600; font-size:15px;">${meta ? meta.name : 'App'}</div>
+    <div class="muted">This app is a preview placeholder in Aster OS.</div>
+  </div>`;
+};
+
+/* ---- Settings ---- */
+RENDERERS.settings = async (root) => {
+  const state = await storeGet('settings', { wifi:true, bluetooth:false, airplane:false, brightness:70, focus:false });
+  const device = await storeGet('device-model', 'iphone13');
+  root.innerHTML = `
+    <div class="section-title">Connectivity</div>
+    <div class="card">
+      <div class="row"><div class="row-label">✈️ Airplane Mode</div><div class="toggle ${state.airplane?'on':''}" data-k="airplane"></div></div>
+      <div class="row"><div class="row-label">📶 Wi-Fi</div><div class="toggle ${state.wifi?'on':''}" data-k="wifi"></div></div>
+      <div class="row"><div class="row-label">🔷 Bluetooth</div><div class="toggle ${state.bluetooth?'on':''}" data-k="bluetooth"></div></div>
+    </div>
+    <div class="section-title">Display</div>
+    <div class="card">
+      <div class="row"><div class="row-label">🌙 Focus Mode</div><div class="toggle ${state.focus?'on':''}" data-k="focus"></div></div>
+      <div style="padding:14px 4px 4px 4px;">
+        <div class="row-label" style="margin-bottom:10px;">☀️ Brightness</div>
+        <input type="range" min="10" max="100" value="${state.brightness}" class="brightness-slider" id="brightRange">
+      </div>
+    </div>
+    <div class="section-title">Device</div>
+    <div class="card">
+      <div class="row">
+        <div class="row-label">📱 Model</div>
+        <select id="modelSelect" class="model-select">
+          <option value="iphone13" ${device==='iphone13'?'selected':''}>iPhone 13</option>
+          <option value="other" ${device==='other'?'selected':''}>Other</option>
+          <option value="ipad-mini" ${device==='ipad-mini'?'selected':''}>iPad Mini</option>
+        </select>
+      </div>
+      <div class="muted" style="padding:8px 4px 2px 4px; line-height:1.5;" id="modelHint"></div>
+    </div>
+    <div class="section-title">About</div>
+    <div class="card">
+      <div class="row"><div class="row-label">Name</div><div class="muted">Aster OS</div></div>
+      <div class="row"><div class="row-label">Version</div><div class="muted">1.0 (Build 24C)</div></div>
+      <div class="row"><div class="row-label">Screen</div><div class="muted">Simulated — 375×812</div></div>
+    </div>
+  `;
+  root.querySelectorAll('.toggle').forEach(t => {
+    t.addEventListener('click', async () => {
+      t.classList.toggle('on');
+      state[t.dataset.k] = t.classList.contains('on');
+      await storeSet('settings', state);
+    });
+  });
+  root.querySelector('#brightRange').addEventListener('input', (e) => {
+    applyBrightness(Number(e.target.value));
+  });
+  root.querySelector('#brightRange').addEventListener('change', async (e) => {
+    state.brightness = Number(e.target.value);
+    await storeSet('settings', state);
+  });
+  function updateHint(val){
+    const hints = {
+      iphone13: 'Status bar spacing is set to match the iPhone 13\'s sensor housing, without drawing the notch itself.',
+      other: 'Status bar uses a standard slim layout with no notch reserve.',
+      'ipad-mini': 'Switches the whole canvas to a landscape iPad Mini size, with a larger grid, dock, and lock screen to match.'
+    };
+    root.querySelector('#modelHint').textContent = hints[val] || '';
+  }
+  updateHint(device);
+  root.querySelector('#modelSelect').addEventListener('change', async (e) => {
+    const val = e.target.value;
+    applyDeviceModel(val);
+    await storeSet('device-model', val);
+    updateHint(val);
+  });
+};
+
+/* ---- Calculator ---- */
+RENDERERS.calculator = (root) => {
+  let expr = '0';
+  root.innerHTML = `
+    <div class="calc-display" id="calcDisplay">0</div>
+    <div class="calc-grid" id="calcGrid"></div>
+  `;
+  const keys = [
+    ['C','fn'],['±','fn'],['%','fn'],['÷','op'],
+    ['7',''],['8',''],['9',''],['×','op'],
+    ['4',''],['5',''],['6',''],['−','op'],
+    ['1',''],['2',''],['3',''],['+','op'],
+    ['0','zero'],['.',''],['=','op'],
+  ];
+  const gridEl = root.querySelector('#calcGrid');
+  const disp = root.querySelector('#calcDisplay');
+  keys.forEach(([label, cls]) => {
+    const b = document.createElement('button');
+    b.className = 'calc-btn ' + cls;
+    b.textContent = label;
+    b.addEventListener('click', () => handle(label));
+    gridEl.appendChild(b);
+  });
+  function handle(k){
+    if(k === 'C'){ expr = '0'; }
+    else if(k === '='){
+      try{
+        const safe = expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/%/g,'/100');
+        // eslint-disable-next-line no-eval
+        const result = Function('"use strict"; return (' + safe + ')')();
+        expr = Number.isFinite(result) ? String(Math.round(result * 1e8) / 1e8) : 'Error';
+      }catch(e){ expr = 'Error'; }
+    } else if(k === '±'){
+      expr = expr.startsWith('-') ? expr.slice(1) : '-' + expr;
+    } else {
+      expr = (expr === '0' && !'.+−×÷'.includes(k)) ? k : expr + k;
+    }
+    disp.textContent = expr;
+  }
+};
+
+/* ---- Clock ---- */
+RENDERERS.clock = (root) => {
+  root.innerHTML = `
+    <div class="clock-big">
+      <div class="digits" id="clockAppDigits">00:00:00</div>
+      <div class="muted" style="margin-top:6px;">Local time</div>
+    </div>
+    <div class="section-title">Stopwatch</div>
+    <div class="card" style="text-align:center;">
+      <div class="digits" id="swDigits" style="font-family:'Space Grotesk'; font-size:38px; font-weight:600;">00:00.0</div>
+      <div class="stopwatch-row">
+        <button class="btn btn-primary btn-block" id="swToggle">Start</button>
+        <button class="btn btn-secondary btn-block" id="swReset">Reset</button>
+      </div>
+    </div>
+  `;
+  updateClocks();
+  let running = false, elapsed = 0, tickHandle = null, last = 0;
+  const swDigits = root.querySelector('#swDigits');
+  const fmt = ms => {
+    const cs = Math.floor((ms % 1000) / 100);
+    const s = Math.floor(ms / 1000) % 60;
+    const m = Math.floor(ms / 60000);
+    return `${pad(m)}:${pad(s)}.${cs}`;
+  };
+  root.querySelector('#swToggle').addEventListener('click', (e) => {
+    running = !running;
+    e.target.textContent = running ? 'Pause' : 'Start';
+    if(running){
+      last = Date.now();
+      tickHandle = setInterval(() => {
+        elapsed += Date.now() - last; last = Date.now();
+        swDigits.textContent = fmt(elapsed);
+      }, 100);
+    } else { clearInterval(tickHandle); }
+  });
+  root.querySelector('#swReset').addEventListener('click', () => {
+    running = false; elapsed = 0; clearInterval(tickHandle);
+    swDigits.textContent = '00:00.0';
+    root.querySelector('#swToggle').textContent = 'Start';
+  });
+};
+
+/* ---- Notes ---- */
+RENDERERS.notes = async (root) => {
+  let notes = await storeGet('notes-list', [
+    { id:1, text:'Prober script: run with circuit connected, capture log.', ts: Date.now() - 86400000 },
+    { id:2, text:'NovaOS: revisit taskbar spacing before next ISO build.', ts: Date.now() - 3600000 },
+  ]);
+  root.innerHTML = `
+    <div class="new-note-box">
+      <textarea id="newNoteText" placeholder="New note…"></textarea>
+      <button class="btn btn-primary" id="addNoteBtn">Add Note</button>
+    </div>
+    <div class="section-title">All Notes</div>
+    <div id="notesList"></div>
+  `;
+  const listEl = root.querySelector('#notesList');
+  function render(){
+    listEl.innerHTML = '';
+    notes.slice().sort((a,b) => b.ts - a.ts).forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'note-item';
+      div.innerHTML = `<div class="note-text"></div>
+        <div class="note-meta"><span>${new Date(n.ts).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</span><span class="note-del">Delete</span></div>`;
+      div.querySelector('.note-text').textContent = n.text;
+      div.querySelector('.note-del').addEventListener('click', async () => {
+        notes = notes.filter(x => x.id !== n.id);
+        await storeSet('notes-list', notes);
+        render();
+      });
+      listEl.appendChild(div);
+    });
+  }
+  render();
+  root.querySelector('#addNoteBtn').addEventListener('click', async () => {
+    const ta = root.querySelector('#newNoteText');
+    if(!ta.value.trim()) return;
+    notes.push({ id: Date.now(), text: ta.value.trim(), ts: Date.now() });
+    ta.value = '';
+    await storeSet('notes-list', notes);
+    render();
+  });
+};
+
+/* ---- Weather ---- */
+RENDERERS.weather = async (root) => {
+  const defaultCities = [
+    { id:'okc', name:'Oklahoma City', temp:84, cond:'Clear', hi:91, lo:72 },
+    { id:'austin', name:'Austin', temp:97, cond:'Sunny', hi:101, lo:78 },
+    { id:'seattle', name:'Seattle', temp:68, cond:'Cloudy', hi:71, lo:58 },
+    { id:'denver', name:'Denver', temp:79, cond:'Windy', hi:85, lo:60 },
+  ];
+  let cities = await storeGet('weather-cities', defaultCities);
+  let currentId = (await storeGet('weather-current', cities[0].id));
+  if(!cities.find(c => c.id === currentId)) currentId = cities[0] ? cities[0].id : null;
+
+  const conds = ['Clear','Sunny','Cloudy','Windy','Partly Cloudy','Rain'];
+  function synthesize(name){
+    const temp = 55 + Math.floor(Math.random() * 45);
+    return {
+      id: name.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + Date.now(),
+      name,
+      temp,
+      cond: conds[Math.floor(Math.random() * conds.length)],
+      hi: temp + 3 + Math.floor(Math.random() * 5),
+      lo: temp - (8 + Math.floor(Math.random() * 6)),
+    };
+  }
+
+  function render(){
+    const current = cities.find(c => c.id === currentId) || cities[0];
+    root.innerHTML = `
+      <div class="weather-hero">
+        <div class="muted">${current ? current.name : 'No cities yet'}</div>
+        <div class="temp">${current ? current.temp + '°' : '--'}</div>
+        <div class="muted">${current ? current.cond + ' · H:' + current.hi + '° L:' + current.lo + '°' : 'Add a city below'}</div>
+      </div>
+      <div class="section-title">Cities</div>
+      <div class="card weather-city-list" id="cityList"></div>
+      <div class="section-title">Add City</div>
+      <div class="new-note-box" style="flex-direction:row; gap:8px;">
+        <input type="text" id="cityInput" placeholder="City name" style="flex:1; background:var(--surface-2); border:1px solid var(--hairline); border-radius:12px; color:var(--text); padding:11px 14px; font-family:'Inter'; font-size:14px;">
+        <button class="btn btn-primary" id="addCityBtn">Add</button>
+      </div>
+    `;
+    const listEl = root.querySelector('#cityList');
+    cities.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<div class="row-label">${c.name}${c.id===currentId?' 📍':''}</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="muted">${c.temp}°</span>
+          <span class="note-del" data-id="${c.id}">Remove</span>
+        </div>`;
+      row.querySelector('.row-label').addEventListener('click', async () => {
+        currentId = c.id; await storeSet('weather-current', currentId); render();
+      });
+      row.querySelector('.note-del').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        cities = cities.filter(x => x.id !== c.id);
+        if(currentId === c.id) currentId = cities[0] ? cities[0].id : null;
+        await storeSet('weather-cities', cities);
+        await storeSet('weather-current', currentId);
+        render();
+      });
+      listEl.appendChild(row);
+    });
+    root.querySelector('#addCityBtn').addEventListener('click', async () => {
+      const input = root.querySelector('#cityInput');
+      const name = input.value.trim();
+      if(!name) return;
+      const city = synthesize(name);
+      cities.push(city);
+      currentId = city.id;
+      await storeSet('weather-cities', cities);
+      await storeSet('weather-current', currentId);
+      render();
+    });
+    root.querySelector('#cityInput').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') root.querySelector('#addCityBtn').click();
+    });
+  }
+  render();
+};
+
+/* ---- Photos ---- */
+RENDERERS.photos = (root) => {
+  const grads = [
+    'linear-gradient(160deg,#ff8a65,#e6532d)','linear-gradient(160deg,#7db8ff,#3f6fc9)',
+    'linear-gradient(160deg,#ffd76a,#e8a93a)','linear-gradient(160deg,#8fd3a3,#3f9d64)',
+    'linear-gradient(160deg,#ff9ecb,#c65fa0)','linear-gradient(160deg,#6ee0ff,#2a9dc9)',
+    'linear-gradient(160deg,#c9a0ff,#7a4fd1)','linear-gradient(160deg,#ff7d9c,#e0355f)',
+    'linear-gradient(160deg,#a0e0c9,#4fd1a0)'
+  ];
+  root.innerHTML = `<div class="gallery-grid" id="gal"></div>`;
+  const gal = root.querySelector('#gal');
+  grads.forEach(g => {
+    const t = document.createElement('div');
+    t.className = 'gallery-tile';
+    t.style.background = g;
+    gal.appendChild(t);
+  });
+};
+
+/* ---- Browser ---- */
+RENDERERS.browser = (root) => {
+  root.innerHTML = `
+    <div class="browser-app">
+      <div class="browser-bar">
+        <input type="text" id="urlInput" value="https://example.com" placeholder="Search or enter address">
+        <button class="btn btn-primary" id="goBtn">Go</button>
+      </div>
+      <div class="browser-note">This is a real &lt;iframe&gt;, not a mock. Some sites refuse to be embedded (X-Frame-Options / CSP) and won't load here — that's the site's restriction, not this browser's.</div>
+      <div class="browser-frame-wrap">
+        <iframe id="browserFrame" src="https://example.com" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  `;
+  const input = root.querySelector('#urlInput');
+  const frame = root.querySelector('#browserFrame');
+  function normalize(raw){
+    let v = raw.trim();
+    if(!v) return 'https://example.com';
+    if(!/^https?:\/\//i.test(v)){
+      v = v.includes('.') && !v.includes(' ')
+        ? 'https://' + v
+        : 'https://www.google.com/search?q=' + encodeURIComponent(v);
+    }
+    return v;
+  }
+  function go(){
+    const url = normalize(input.value);
+    input.value = url;
+    frame.src = url;
+  }
+  root.querySelector('#goBtn').addEventListener('click', go);
+  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') go(); });
+};
+
+/* ---- Camera ---- */
+let cameraStream = null;
+async function stopCamera(){
+  if(cameraStream){ cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+}
+RENDERERS.camera = async (root) => {
+  root.innerHTML = `
+    <div class="camera-view" id="camView">
+      <div class="camera-fallback" id="camFallback">Camera preview unavailable in this environment.<br>Tap the shutter to capture a placeholder frame.</div>
+    </div>
+    <div class="shutter-wrap"><div class="shutter" id="shutterBtn"></div></div>
+    <div class="thumb-strip" id="thumbStrip"></div>
+  `;
+  const camView = root.querySelector('#camView');
+  const thumbStrip = root.querySelector('#thumbStrip');
+  let videoEl = null;
+  try{
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video:true });
+    videoEl = document.createElement('video');
+    videoEl.autoplay = true; videoEl.muted = true; videoEl.playsInline = true;
+    videoEl.srcObject = cameraStream;
+    camView.innerHTML = ''; camView.appendChild(videoEl);
+  }catch(e){ /* keep fallback message */ }
+
+  root.querySelector('#shutterBtn').addEventListener('click', () => {
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    if(videoEl){
+      const canvas = document.createElement('canvas');
+      canvas.width = 80; canvas.height = 80;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoEl, 0, 0, 80, 80);
+      thumb.style.background = `url(${canvas.toDataURL()}) center/cover`;
+    } else {
+      const swatches = ['#ff8a65','#7db8ff','#ffd76a','#8fd3a3','#ff9ecb'];
+      thumb.style.background = swatches[Math.floor(Math.random()*swatches.length)];
+    }
+    thumbStrip.prepend(thumb);
+    camView.style.filter = 'brightness(2)';
+    setTimeout(() => camView.style.filter = '', 120);
+  });
+};
+
+/* ---- Music ---- */
+let musicInterval = null;
+function stopMusic(){ clearInterval(musicInterval); musicInterval = null; }
+RENDERERS.music = (root) => {
+  const tracks = [
+    { title:'Breadboard Sketches', artist:'Nova Circuit', color:'#ff8a65', dur:184 },
+    { title:'Live-Build', artist:'Debian Drift', color:'#7db8ff', dur:221 },
+    { title:'BLE Handshake', artist:'Prober Set', color:'#8fd3a3', dur:150 },
+  ];
+  let idx = 0, playing = false, pos = 0;
+  root.innerHTML = `
+    <div class="disc" id="disc"></div>
+    <div class="track-title" id="tTitle"></div>
+    <div class="track-artist" id="tArtist"></div>
+    <div class="progress-bar"><div class="progress-fill" id="pFill"></div></div>
+    <div class="player-controls">
+      <div id="prevBtn" style="cursor:pointer; font-size:20px;">⏮</div>
+      <div class="play-btn" id="playBtn">▶</div>
+      <div id="nextBtn" style="cursor:pointer; font-size:20px;">⏭</div>
+    </div>
+    <div class="section-title">Up Next</div>
+    <div id="trackList"></div>
+  `;
+  const disc = root.querySelector('#disc');
+  const tTitle = root.querySelector('#tTitle'), tArtist = root.querySelector('#tArtist');
+  const pFill = root.querySelector('#pFill'), playBtn = root.querySelector('#playBtn');
+  const trackList = root.querySelector('#trackList');
+
+  function renderList(){
+    trackList.innerHTML = '';
+    tracks.forEach((t, i) => {
+      const item = document.createElement('div');
+      item.className = 'track-list-item';
+      item.innerHTML = `<div class="swatch" style="background:${t.color}"></div>
+        <div><div style="font-weight:500; font-size:14px;">${t.title}</div><div class="muted">${t.artist}</div></div>`;
+      item.addEventListener('click', () => { idx = i; pos = 0; loadTrack(); if(!playing) togglePlay(); });
+      trackList.appendChild(item);
+    });
+  }
+  function loadTrack(){
+    const t = tracks[idx];
+    tTitle.textContent = t.title; tArtist.textContent = t.artist;
+    disc.style.background = `conic-gradient(from 90deg, ${t.color}, var(--periwinkle), var(--mint), ${t.color})`;
+    pFill.style.width = (pos / t.dur * 100) + '%';
+  }
+  function togglePlay(){
+    playing = !playing;
+    playBtn.textContent = playing ? '⏸' : '▶';
+    disc.classList.toggle('spin', playing);
+    if(playing){
+      musicInterval = setInterval(() => {
+        pos += 1;
+        const t = tracks[idx];
+        if(pos >= t.dur){ pos = 0; idx = (idx + 1) % tracks.length; loadTrack(); }
+        pFill.style.width = (pos / t.dur * 100) + '%';
+      }, 1000);
+    } else { stopMusic(); }
+  }
+  playBtn.addEventListener('click', togglePlay);
+  root.querySelector('#nextBtn').addEventListener('click', () => { idx = (idx+1)%tracks.length; pos=0; loadTrack(); });
+  root.querySelector('#prevBtn').addEventListener('click', () => { idx = (idx-1+tracks.length)%tracks.length; pos=0; loadTrack(); });
+  loadTrack(); renderList();
+};
+
+/* ---- Phone / Dialer ---- */
+RENDERERS.phone = (root) => {
+  let num = '';
+  root.innerHTML = `
+    <div class="dial-display" id="dialDisplay"></div>
+    <div class="dial-grid" id="dialGrid"></div>
+    <div class="call-btn" id="callBtn">📞</div>
+    <div class="muted" id="callStatus" style="text-align:center; margin-top:14px;"></div>
+  `;
+  const keys = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+  const gridEl = root.querySelector('#dialGrid');
+  const disp = root.querySelector('#dialDisplay');
+  keys.forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'dial-btn'; b.textContent = k;
+    b.addEventListener('click', () => { num += k; disp.textContent = num; });
+    gridEl.appendChild(b);
+  });
+  root.querySelector('#callBtn').addEventListener('click', () => {
+    if(!num) return;
+    const status = root.querySelector('#callStatus');
+    status.textContent = `Calling ${num}…`;
+    setTimeout(() => { status.textContent = 'Call ended'; }, 2200);
+  });
+};
+
+/* ---- Messages ---- */
+RENDERERS.messages = (root) => {
+  const threads = [
+    { name:'Sam', color:'#ff8a65', preview:'Did the BLE prober log anything new?', unread:true },
+    { name:'NovaOS Group', color:'#7db8ff', preview:'Taskbar spacing looks better now', unread:false },
+    { name:'Ren', color:'#8fd3a3', preview:'Sent you the Snap Circuits datasheet', unread:false },
+  ];
+  root.innerHTML = `<div id="threadList"></div>`;
+  const listEl = root.querySelector('#threadList');
+  threads.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'msg-thread-item';
+    item.innerHTML = `<div class="msg-avatar" style="background:${t.color}">${t.name[0]}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600; font-size:14px;">${t.name}</div>
+        <div class="muted">${t.preview}</div>
+      </div>`;
+    item.addEventListener('click', () => openThread(t));
+    listEl.appendChild(item);
+  });
+  function openThread(t){
+    appTitle.textContent = t.name;
+    root.innerHTML = `
+      <div style="display:flex; flex-direction:column;">
+        <div class="bubble them">Hey, how's the reverse-engineering going?</div>
+        <div class="bubble me">Slow but steady — mapping the BLE characteristic now.</div>
+        <div class="bubble them">${t.preview}</div>
+      </div>
+    `;
+  }
+};
+
+/* ---- Placeholders ---- */
+RENDERERS.appstore = (root) => RENDERERS.placeholder(root, { glyph:'🛍️', name:'App Store' });
+RENDERERS.files = (root) => RENDERERS.placeholder(root, { glyph:'📁', name:'Files' });
+
+</script>
+</body>
+</html>
