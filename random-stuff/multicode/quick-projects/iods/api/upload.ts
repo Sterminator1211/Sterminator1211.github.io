@@ -46,7 +46,7 @@ export default async function handler(
 
         const filename = createFilename();
 
-        const path = `data/${filename}`;
+        const path = `${process.env.IODS_DATA_DIR || "data"}/${filename}`;
 
         await createFile(
             path,
