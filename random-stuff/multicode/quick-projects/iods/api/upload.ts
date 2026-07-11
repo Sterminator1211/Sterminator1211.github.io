@@ -6,7 +6,6 @@ import { createFilename } from "../lib/filenames.js";
 import { validateJSON } from "../lib/validation.js";
 import { createFile } from "../lib/github.js";
 
-
 export default async function handler(
     req: VercelRequest,
     res: VercelResponse
@@ -14,11 +13,9 @@ export default async function handler(
 
     applyCORS(res);
 
-
     if (req.method === "OPTIONS") {
         return res.status(200).end();
     }
-
 
     if (req.method !== "POST") {
         return res.status(405).json({
@@ -26,18 +23,15 @@ export default async function handler(
         });
     }
 
-
     if (!verifyAPIKey(req)) {
         return res.status(401).json({
             error: "Invalid API key"
         });
     }
 
-
     try {
 
         const body = req.body;
-
 
         if (!validateJSON(body)) {
             return res.status(400).json({
@@ -45,35 +39,20 @@ export default async function handler(
             });
         }
 
-
         const uploadData = {
-            timestamp:
-                new Date().toISOString(),
-
+            timestamp: new Date().toISOString(),
             ...body
         };
 
+        const filename = createFilename();
 
-        const filename =
-            createFilename();
-
-
-        const path =
-            `data/${filename}`;
-
+        const path = `data/${filename}`;
 
         await createFile(
             path,
-
-            JSON.stringify(
-                uploadData,
-                null,
-                2
-            ),
-
+            uploadData,
             `Upload ${filename}`
         );
-
 
         return res.status(200).json({
             success: true,
@@ -81,15 +60,17 @@ export default async function handler(
             path
         });
 
-
-    } catch (error) {
+    } catch (error: any) {
 
         console.error(error);
 
-
         return res.status(500).json({
-            error: "Upload failed"
+            error: "Upload failed",
+            message: error?.message,
+            status: error?.status,
+            github: error?.response?.data
         });
 
     }
+
 }
