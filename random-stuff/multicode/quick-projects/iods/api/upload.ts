@@ -46,7 +46,8 @@ export default async function handler(
 
         const filename = createFilename();
 
-        const path = `${process.env.IODS_DATA_DIR || "data"}/${filename}`;
+        const path =
+            `${process.env.IODS_DATA_DIR || "data"}/${filename}`;
 
         await createFile(
             path,
@@ -62,13 +63,47 @@ export default async function handler(
 
     } catch (error: any) {
 
-        console.error(error);
+        console.error("UPLOAD ERROR:", error);
 
         return res.status(500).json({
+
             error: "Upload failed",
-            message: error?.message,
-            status: error?.status,
-            github: error?.response?.data
+
+            debug: {
+
+                message:
+                    error?.message,
+
+                status:
+                    error?.status,
+
+                githubResponse:
+                    error?.response?.data,
+
+                request:
+                    error?.request?.options,
+
+                stack:
+                    error?.stack
+
+            },
+
+            environment: {
+
+                owner:
+                    process.env.IODS_GH_OWNER,
+
+                repo:
+                    process.env.IODS_GH_REPO,
+
+                branch:
+                    process.env.IODS_GH_BRANCH,
+
+                dataDir:
+                    process.env.IODS_DATA_DIR
+
+            }
+
         });
 
     }
