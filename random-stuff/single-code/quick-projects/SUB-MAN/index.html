@@ -1,161 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Manager</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 20px;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-        }
-        h2 {
-            color: #34495e;
-            margin-top: 30px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-        }
-        th {
-            background-color: #3498db;
-            color: white;
-            text-transform: uppercase;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        tr:hover {
-            background-color: #eaeded;
-        }
-        .price {
-            font-weight: bold;
-            color: #27ae60;
-        }
-        .error {
-            color: #c0392b;
-            font-weight: bold;
-        }
-        small {
-            color: #7f8c8d;
-            display: block;
-            font-weight: normal;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member & Subscription Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .modal { animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
 </head>
-<body>
+<body class="bg-gray-950 text-white">
+  <div class="max-w-6xl mx-auto p-8">
+    <header class="flex justify-between items-center mb-10">
+      <h1 class="text-4xl font-bold flex items-center gap-4">
+        <i class="fas fa-users-cog text-blue-500"></i>
+        Manager
+      </h1>
+      <div class="flex gap-4">
+        <button onclick="loadData()" class="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex items-center gap-2">
+          <i class="fas fa-sync"></i> Refresh
+        </button>
+        <button onclick="downloadJSONs()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl flex items-center gap-2 font-medium">
+          <i class="fas fa-download"></i> Download JSONs
+        </button>
+      </div>
+    </header>
 
-    <h1>Subscription Dashboard</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Members -->
+      <div class="bg-zinc-900 rounded-3xl p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold">Members</h2>
+          <button onclick="showAddMemberModal()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-2xl text-sm font-medium flex items-center gap-2">
+            <i class="fas fa-plus"></i> Add Member
+          </button>
+        </div>
+        <div id="members-list" class="space-y-3 min-h-[400px]"></div>
+      </div>
 
-    <h2>1. Paid Subscriptions</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Subscription Plan</th>
-                <th>Standard Monthly Tier</th>
-                <th>Features Included</th>
-            </tr>
-        </thead>
-        <tbody id="paid-subs-tbody">
-            <tr>
-                <td colspan="3">Loading subscriptions...</td>
-            </tr>
-        </tbody>
-    </table>
+      <!-- Subscriptions -->
+      <div class="bg-zinc-900 rounded-3xl p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold">Services / Subs</h2>
+          <button onclick="showAddSubModal()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-2xl text-sm font-medium flex items-center gap-2">
+            <i class="fas fa-plus"></i> Add Service
+          </button>
+        </div>
+        <div id="subs-list" class="space-y-3 min-h-[400px]"></div>
+      </div>
+    </div>
+  </div>
 
-    <hr>
+  <!-- Modals will be added via JS -->
 
-    <h2>2. Member Billing & Subscriptions</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Subscriber Name</th>
-                <th>Active Subscription</th>
-                <th>Amount Paid (Discounts Applied)</th>
-            </tr>
-        </thead>
-        <tbody id="member-billing-tbody">
-            <tr>
-                <td colspan="3">Loading member billing data...</td>
-            </tr>
-        </tbody>
-    </table>
+  <script>
+    let members = [];
+    let subs = [];
 
-    <script>
-        // 1. Fetch Paid Subscriptions
-        fetch('paid_subs.json')
-            .then(response => {
-                if (!response.ok) throw new Error('Could not load paid subscriptions');
-                return response.json();
-            })
-            .then(data => {
-                const tbody = document.getElementById('paid-subs-tbody');
-                tbody.innerHTML = ''; 
+    async function loadData() {
+      try {
+        const [mRes, sRes] = await Promise.all([
+          fetch('/members.json'),
+          fetch('/subs.json')
+        ]);
+        members = mRes.ok ? await mRes.json() : [];
+        subs = sRes.ok ? await sRes.json() : [];
+      } catch(e) {}
+      renderAll();
+    }
 
-                data.forEach(sub => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td><strong>${sub.name}</strong></td>
-                        <td class="price">${sub.price}</td>
-                        <td>${sub.features}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error(error);
-                document.getElementById('paid-subs-tbody').innerHTML = 
-                    `<tr><td colspan="3" class="error">Error loading subscription data.</td></tr>`;
-            });
+    function renderAll() {
+      renderMembers();
+      renderSubs();
+    }
 
-        // 2. Fetch Member Billing Data
-        fetch('member_billing_subs.json')
-            .then(response => {
-                if (!response.ok) throw new Error('Could not load member billing data');
-                return response.json();
-            })
-            .then(data => {
-                const tbody = document.getElementById('member-billing-tbody');
-                tbody.innerHTML = ''; 
+    // Render functions...
+    function renderMembers() {
+      const el = document.getElementById('members-list');
+      el.innerHTML = members.length ? members.map((m, i) => `
+        <div class="bg-zinc-800 p-5 rounded-2xl flex justify-between items-center group">
+          <div>
+            <div class="font-medium text-lg">${m.name}</div>
+            <div class="text-zinc-400 text-sm">${m.email}</div>
+          </div>
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+            <button onclick="editMember(${i})" class="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl">Edit</button>
+            <button onclick="deleteMember(${i})" class="px-4 py-2 bg-red-900 hover:bg-red-800 rounded-xl">Delete</button>
+          </div>
+        </div>
+      `).join('') : '<p class="text-zinc-500 text-center py-12">No members yet</p>';
+    }
 
-                data.forEach(member => {
-                    const row = document.createElement('tr');
-                    
-                    // Check if there is a note (like a discount) to append
-                    const noteSpan = member.note ? `<small>(${member.note})</small>` : '';
+    function renderSubs() {
+      const el = document.getElementById('subs-list');
+      el.innerHTML = subs.length ? subs.map((s, i) => `
+        <div class="bg-zinc-800 p-5 rounded-2xl flex justify-between items-center group">
+          <div>
+            <div class="font-medium text-lg">${s.name}</div>
+            <div class="text-emerald-400">${s.price ? '$' + s.price : ''}</div>
+          </div>
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+            <button onclick="editSub(${i})" class="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl">Edit</button>
+            <button onclick="deleteSub(${i})" class="px-4 py-2 bg-red-900 hover:bg-red-800 rounded-xl">Delete</button>
+          </div>
+        </div>
+      `).join('') : '<p class="text-zinc-500 text-center py-12">No services yet</p>';
+    }
 
-                    row.innerHTML = `
-                        <td>${member.name}</td>
-                        <td>${member.subscription}</td>
-                        <td class="price">${member.amountPaid} ${noteSpan}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error(error);
-                document.getElementById('member-billing-tbody').innerHTML = 
-                    `<tr><td colspan="3" class="error">Error loading member data.</td></tr>`;
-            });
-    </script>
+    // Add/Edit/Delete functions (with better modals coming)
+    function showAddMemberModal() {
+      const name = prompt("Member Name:");
+      if (!name) return;
+      const email = prompt("Email:");
+      members.push({id: Date.now(), name, email});
+      renderMembers();
+    }
+
+    // Similar for others...
+
+    function downloadJSONs() {
+      const mData = JSON.stringify(members, null, 2);
+      const sData = JSON.stringify(subs, null, 2);
+
+      downloadFile('members.json', mData);
+      downloadFile('subs.json', sData);
+    }
+
+    function downloadFile(filename, content) {
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+    }
+
+    window.onload = loadData;
+  </script>
 </body>
 </html>
