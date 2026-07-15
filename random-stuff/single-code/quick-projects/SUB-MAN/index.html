@@ -3,31 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Member Manager</title>
+  <title>Member & Subscription Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body class="bg-zinc-950 text-white p-8">
-  <div class="max-w-6xl mx-auto">
-    <h1 class="text-4xl font-bold mb-2">Member Manager</h1>
-    <p class="text-zinc-400 mb-8">Changes can be saved directly to GitHub</p>
+<body class="bg-zinc-950 text-zinc-100">
+  <div class="max-w-6xl mx-auto p-8">
+    <header class="mb-10">
+      <h1 class="text-4xl font-bold flex items-center gap-3">
+        <i class="fas fa-users-cog"></i> Member Manager
+      </h1>
+      <p class="text-zinc-400">Changes saved directly to GitHub</p>
+    </header>
 
-    <div class="grid grid-cols-2 gap-8">
-      <div>
-        <h2 class="text-2xl mb-4">Members</h2>
-        <button onclick="addMember()" class="bg-blue-600 px-4 py-2 rounded mb-4">+ Add</button>
-        <div id="members-list"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Members -->
+      <div class="bg-zinc-900 rounded-3xl p-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold">Members</h2>
+          <button onclick="addMember()" class="bg-violet-600 hover:bg-violet-500 px-5 py-2 rounded-2xl flex items-center gap-2">
+            <i class="fas fa-plus"></i> Add Member
+          </button>
+        </div>
+        <div id="members-list" class="space-y-4"></div>
       </div>
 
-      <div>
-        <h2 class="text-2xl mb-4">Services</h2>
-        <button onclick="addService()" class="bg-blue-600 px-4 py-2 rounded mb-4">+ Add</button>
-        <div id="services-list"></div>
+      <!-- Services -->
+      <div class="bg-zinc-900 rounded-3xl p-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold">Services</h2>
+          <button onclick="addService()" class="bg-violet-600 hover:bg-violet-500 px-5 py-2 rounded-2xl flex items-center gap-2">
+            <i class="fas fa-plus"></i> Add Service
+          </button>
+        </div>
+        <div id="services-list" class="space-y-4"></div>
       </div>
     </div>
 
-    <div class="mt-8">
-      <button onclick="saveToGitHub()" class="bg-green-600 px-6 py-3 rounded-xl font-bold text-lg">
-        💾 Save All Changes to GitHub
+    <div class="mt-12 text-center">
+      <button onclick="saveAllToGitHub()" 
+              class="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-4 rounded-3xl text-lg font-semibold flex items-center gap-3 mx-auto">
+        <i class="fas fa-save"></i>
+        SAVE ALL CHANGES TO GITHUB
       </button>
     </div>
   </div>
@@ -37,60 +54,120 @@
     let services = [];
 
     async function loadData() {
-      members = await fetch('/members.json').then(r => r.json()).catch(() => []);
-      services = await fetch('/subs.json').then(r => r.json()).catch(() => []);
-      render();
+      try {
+        members = await (await fetch('/members.json')).json();
+        services = await (await fetch('/subs.json')).json();
+      } catch (e) {}
+      renderMembers();
+      renderServices();
     }
 
-    function render() {
-      document.getElementById('members-list').innerHTML = members.map((m,i) => `
-        <div class="bg-zinc-900 p-4 rounded mb-3">
-          <strong>${m.name}</strong><br>
-          Sub: ${m.subscription} | Paying: $${m.amount}
-          <button onclick="editMember(${i})" class="ml-4 text-blue-400">Edit</button>
+    function renderMembers() {
+      const container = document.getElementById('members-list');
+      container.innerHTML = members.map((m, i) => `
+        <div class="bg-zinc-800 rounded-2xl p-6">
+          <div class="font-bold text-xl">${m.name}</div>
+          <div class="text-violet-400">Subscription: ${m.subscription || 'None'}</div>
+          <div class="text-emerald-400">Paying: $${m.amount || '0'}</div>
+          <div class="mt-4 flex gap-4">
+            <button onclick="editMember(${i})" class="text-blue-400 hover:underline">Edit</button>
+            <button onclick="deleteMember(${i})" class="text-red-400 hover:underline">Delete</button>
+          </div>
         </div>
-      `).join('');
-
-      document.getElementById('services-list').innerHTML = services.map((s,i) => `
-        <div class="bg-zinc-900 p-4 rounded mb-3">
-          ${s.name} - $${s.price}
-          <button onclick="editService(${i})" class="ml-4 text-blue-400">Edit</button>
-        </div>
-      `).join('');
+      `).join('') || '<p class="text-zinc-500 text-center py-8">No members yet</p>';
     }
 
-    async function saveToGitHub() {
-      const token = prompt("Enter your GitHub token (for this session):");
+    function renderServices() {
+      const container = document.getElementById('services-list');
+      container.innerHTML = services.map((s, i) => `
+        <div class="bg-zinc-800 rounded-2xl p-6">
+          <div class="font-bold">${s.name}</div>
+          <div class="text-emerald-400">Price: $${s.price}</div>
+          <div class="mt-4 flex gap-4">
+            <button onclick="editService(${i})" class="text-blue-400 hover:underline">Edit</button>
+            <button onclick="deleteService(${i})" class="text-red-400 hover:underline">Delete</button>
+          </div>
+        </div>
+      `).join('') || '<p class="text-zinc-500 text-center py-8">No services yet</p>';
+    }
+
+    // Member CRUD
+    function addMember() {
+      const name = prompt("Member Name:");
+      if (!name) return;
+      const subscription = prompt("Subscription:");
+      const amount = prompt("Amount Paying:");
+      members.push({ id: Date.now(), name, subscription, amount });
+      renderMembers();
+    }
+
+    function editMember(i) {
+      const m = members[i];
+      m.name = prompt("Name:", m.name) || m.name;
+      m.subscription = prompt("Subscription:", m.subscription) || m.subscription;
+      m.amount = prompt("Amount:", m.amount) || m.amount;
+      renderMembers();
+    }
+
+    function deleteMember(i) {
+      if (confirm("Delete member?")) {
+        members.splice(i, 1);
+        renderMembers();
+      }
+    }
+
+    // Service CRUD
+    function addService() {
+      const name = prompt("Service Name:");
+      if (!name) return;
+      const price = prompt("Price:");
+      services.push({ id: Date.now(), name, price });
+      renderServices();
+    }
+
+    function editService(i) {
+      const s = services[i];
+      s.name = prompt("Name:", s.name) || s.name;
+      s.price = prompt("Price:", s.price) || s.price;
+      renderServices();
+    }
+
+    function deleteService(i) {
+      if (confirm("Delete service?")) {
+        services.splice(i, 1);
+        renderServices();
+      }
+    }
+
+    async function saveAllToGitHub() {
+      if (!confirm("Save all changes to GitHub?")) return;
+
+      const token = prompt("Enter GitHub Token (for this session):");
       if (!token) return;
 
-      // Save members
-      await fetch('/api/update', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          file: 'members.json',
-          content: members,
-          message: 'Update members'
-        })
-      });
+      try {
+        // Save members
+        await fetch('/api/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: 'members.json', content: members, message: 'Update members' })
+        });
 
-      // Save services
-      await fetch('/api/update', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          file: 'subs.json',
-          content: services,
-          message: 'Update services'
-        })
-      });
+        // Save services
+        await fetch('/api/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: 'subs.json', content: services, message: 'Update services' })
+        });
 
-      alert("✅ Saved to GitHub!");
-      location.reload();
+        alert("✅ Successfully saved to GitHub!");
+        location.reload();
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
     }
 
-    // Add your CRUD functions here (addMember, editMember, etc.)
-    loadData();
+    window.onload = loadData;
   </script>
 </body>
 </html>
