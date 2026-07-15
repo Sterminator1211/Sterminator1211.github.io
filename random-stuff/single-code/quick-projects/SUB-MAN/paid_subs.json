@@ -1,22 +1,7 @@
 [
     {
-        "name": "StreamMax Premium",
-        "price": "$15.99",
-        "features": "4K Streaming, 4 devices simultaneously"
-    },
-    {
-        "name": "GymFit Membership",
-        "price": "$45.00",
-        "features": "Access to all locations, free classes"
-    },
-    {
-        "name": "CloudStore 1TB",
-        "price": "$9.99",
-        "features": "Secure cloud storage, automatic backup"
-    },
-    {
-        "name": "MusicFlow Ad-Free",
-        "price": "$11.99",
-        "features": "Offline downloads, high-fidelity audio"
+        "name": "Netflix w/ Ads",
+        "price": "$8.99/mo",
+        "features": "1 Member ONLY"
     }
 ]
