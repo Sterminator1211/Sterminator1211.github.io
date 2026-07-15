@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAIN DASHBOARD</title>
+    <title>Subscription Manager</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -55,6 +55,11 @@
             color: #c0392b;
             font-weight: bold;
         }
+        small {
+            color: #7f8c8d;
+            display: block;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -88,65 +93,68 @@
                 <th>Amount Paid (Discounts Applied)</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="member-billing-tbody">
             <tr>
-                <td>Alex Morgan</td>
-                <td>StreamMax Premium</td>
-                <td class="price">$15.99</td>
-            </tr>
-            <tr>
-                <td>Jordan Lee</td>
-                <td>GymFit Membership</td>
-                <td class="price">$40.00 <small>(Student Discount)</small></td>
-            </tr>
-            <tr>
-                <td>Taylor Swift</td>
-                <td>MusicFlow Ad-Free</td>
-                <td class="price">$11.99</td>
-            </tr>
-            <tr>
-                <td>Morgan Freeman</td>
-                <td>CloudStore 1TB</td>
-                <td class="price">$9.99</td>
-            </tr>
-            <tr>
-                <td>Jordan Lee</td>
-                <td>StreamMax Premium</td>
-                <td class="price">$15.99</td>
+                <td colspan="3">Loading member billing data...</td>
             </tr>
         </tbody>
     </table>
 
     <script>
-        // Fetch data from the local JSON file
+        // 1. Fetch Paid Subscriptions
         fetch('paid_subs.json')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Could not load paid subscriptions');
                 return response.json();
             })
             .then(data => {
                 const tbody = document.getElementById('paid-subs-tbody');
-                tbody.innerHTML = ''; // Clear the "Loading..." row
+                tbody.innerHTML = ''; 
 
-                // Loop through JSON data and build the table rows
                 data.forEach(sub => {
                     const row = document.createElement('tr');
-                    
                     row.innerHTML = `
                         <td><strong>${sub.name}</strong></td>
                         <td class="price">${sub.price}</td>
                         <td>${sub.features}</td>
                     `;
-                    
                     tbody.appendChild(row);
                 });
             })
             .catch(error => {
-                console.error('Error fetching JSON:', error);
-                const tbody = document.getElementById('paid-subs-tbody');
-                tbody.innerHTML = `<tr><td colspan="3" class="error">Error loading subscription data. (Make sure you are running a local server!)</td></tr>`;
+                console.error(error);
+                document.getElementById('paid-subs-tbody').innerHTML = 
+                    `<tr><td colspan="3" class="error">Error loading subscription data.</td></tr>`;
+            });
+
+        // 2. Fetch Member Billing Data
+        fetch('member_billing_subs.json')
+            .then(response => {
+                if (!response.ok) throw new Error('Could not load member billing data');
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.getElementById('member-billing-tbody');
+                tbody.innerHTML = ''; 
+
+                data.forEach(member => {
+                    const row = document.createElement('tr');
+                    
+                    // Check if there is a note (like a discount) to append
+                    const noteSpan = member.note ? `<small>(${member.note})</small>` : '';
+
+                    row.innerHTML = `
+                        <td>${member.name}</td>
+                        <td>${member.subscription}</td>
+                        <td class="price">${member.amountPaid} ${noteSpan}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                document.getElementById('member-billing-tbody').innerHTML = 
+                    `<tr><td colspan="3" class="error">Error loading member data.</td></tr>`;
             });
     </script>
 </body>
