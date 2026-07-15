@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAIN DASHBOARD</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #eaeded;
+        }
+        .price {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .error {
+            color: #c0392b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Subscription Dashboard</h1>
+
+    <h2>1. Paid Subscriptions</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Subscription Plan</th>
+                <th>Standard Monthly Tier</th>
+                <th>Features Included</th>
+            </tr>
+        </thead>
+        <tbody id="paid-subs-tbody">
+            <tr>
+                <td colspan="3">Loading subscriptions...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2>2. Member Billing & Subscriptions</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Subscriber Name</th>
+                <th>Active Subscription</th>
+                <th>Amount Paid (Discounts Applied)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Alex Morgan</td>
+                <td>StreamMax Premium</td>
+                <td class="price">$15.99</td>
+            </tr>
+            <tr>
+                <td>Jordan Lee</td>
+                <td>GymFit Membership</td>
+                <td class="price">$40.00 <small>(Student Discount)</small></td>
+            </tr>
+            <tr>
+                <td>Taylor Swift</td>
+                <td>MusicFlow Ad-Free</td>
+                <td class="price">$11.99</td>
+            </tr>
+            <tr>
+                <td>Morgan Freeman</td>
+                <td>CloudStore 1TB</td>
+                <td class="price">$9.99</td>
+            </tr>
+            <tr>
+                <td>Jordan Lee</td>
+                <td>StreamMax Premium</td>
+                <td class="price">$15.99</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch data from the local JSON file
+        fetch('paid_subs.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.getElementById('paid-subs-tbody');
+                tbody.innerHTML = ''; // Clear the "Loading..." row
+
+                // Loop through JSON data and build the table rows
+                data.forEach(sub => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td><strong>${sub.name}</strong></td>
+                        <td class="price">${sub.price}</td>
+                        <td>${sub.features}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching JSON:', error);
+                const tbody = document.getElementById('paid-subs-tbody');
+                tbody.innerHTML = `<tr><td colspan="3" class="error">Error loading subscription data. (Make sure you are running a local server!)</td></tr>`;
+            });
+    </script>
+</body>
+</html>
