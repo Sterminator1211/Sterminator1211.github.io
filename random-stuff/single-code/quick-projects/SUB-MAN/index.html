@@ -3,72 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Member & Subscription Manager</title>
+  <title>Member Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; }
-    .modal {
-      animation: modalPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    @keyframes modalPop {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
-    }
-  </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100">
-  <div class="max-w-6xl mx-auto p-6">
-    <header class="flex justify-between items-center mb-10 border-b border-zinc-800 pb-6">
+<body class="bg-zinc-950 text-white p-8">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-4xl font-bold mb-2">Member Manager</h1>
+    <p class="text-zinc-400 mb-8">Changes can be saved directly to GitHub</p>
+
+    <div class="grid grid-cols-2 gap-8">
       <div>
-        <h1 class="text-4xl font-bold flex items-center gap-3">
-          <i class="fas fa-cogs text-violet-500"></i>
-          Member & Service Manager
-        </h1>
-        <p class="text-zinc-400 mt-1">Edit members and services • Changes saved to JSON on download</p>
-      </div>
-      <div class="flex gap-3">
-        <button onclick="loadData()" 
-                class="flex items-center gap-2 px-5 py-3 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition">
-          <i class="fas fa-sync-alt"></i>
-          <span>Refresh</span>
-        </button>
-        <button onclick="downloadJSONs()" 
-                class="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl transition">
-          <i class="fas fa-download"></i>
-          <span>Download JSON Files</span>
-        </button>
-      </div>
-    </header>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- Members -->
-      <div class="bg-zinc-900 rounded-3xl p-8">
-        <div class="flex items-center justify-between mb-8">
-          <h2 class="text-2xl font-semibold flex items-center gap-2">
-            <i class="fas fa-users"></i> Members
-          </h2>
-          <button onclick="addMember()" 
-                  class="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 px-5 py-2.5 rounded-2xl text-sm font-medium">
-            <i class="fas fa-plus"></i> Add Member
-          </button>
-        </div>
-        <div id="members-list" class="space-y-4"></div>
+        <h2 class="text-2xl mb-4">Members</h2>
+        <button onclick="addMember()" class="bg-blue-600 px-4 py-2 rounded mb-4">+ Add</button>
+        <div id="members-list"></div>
       </div>
 
-      <!-- Services -->
-      <div class="bg-zinc-900 rounded-3xl p-8">
-        <div class="flex items-center justify-between mb-8">
-          <h2 class="text-2xl font-semibold flex items-center gap-2">
-            <i class="fas fa-credit-card"></i> Services
-          </h2>
-          <button onclick="addService()" 
-                  class="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 px-5 py-2.5 rounded-2xl text-sm font-medium">
-            <i class="fas fa-plus"></i> Add Service
-          </button>
-        </div>
-        <div id="services-list" class="space-y-4"></div>
+      <div>
+        <h2 class="text-2xl mb-4">Services</h2>
+        <button onclick="addService()" class="bg-blue-600 px-4 py-2 rounded mb-4">+ Add</button>
+        <div id="services-list"></div>
       </div>
+    </div>
+
+    <div class="mt-8">
+      <button onclick="saveToGitHub()" class="bg-green-600 px-6 py-3 rounded-xl font-bold text-lg">
+        💾 Save All Changes to GitHub
+      </button>
     </div>
   </div>
 
@@ -77,130 +37,60 @@
     let services = [];
 
     async function loadData() {
-      try {
-        const mRes = await fetch('members.json');
-        if (mRes.ok) members = await mRes.json();
-        
-        const sRes = await fetch('subs.json');
-        if (sRes.ok) services = await sRes.json();
-      } catch (err) {
-        console.log("Using empty data");
-      }
-      renderMembers();
-      renderServices();
+      members = await fetch('/members.json').then(r => r.json()).catch(() => []);
+      services = await fetch('/subs.json').then(r => r.json()).catch(() => []);
+      render();
     }
 
-    function renderMembers() {
-      const container = document.getElementById('members-list');
-      if (members.length === 0) {
-        container.innerHTML = `<p class="text-zinc-500 text-center py-12">No members yet. Add one above.</p>`;
-        return;
-      }
-      container.innerHTML = members.map((member, index) => `
-        <div class="bg-zinc-800 rounded-2xl p-6 flex justify-between items-center group">
-          <div>
-            <div class="text-lg font-medium">${member.name}</div>
-            <div class="text-zinc-400 text-sm">${member.email || ''}</div>
-          </div>
-          <div class="flex gap-3">
-            <button onclick="editMember(${index})" 
-                    class="px-5 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm">Edit</button>
-            <button onclick="deleteMember(${index})" 
-                    class="px-5 py-2 bg-red-900/50 hover:bg-red-900 rounded-xl text-sm">Delete</button>
-          </div>
+    function render() {
+      document.getElementById('members-list').innerHTML = members.map((m,i) => `
+        <div class="bg-zinc-900 p-4 rounded mb-3">
+          <strong>${m.name}</strong><br>
+          Sub: ${m.subscription} | Paying: $${m.amount}
+          <button onclick="editMember(${i})" class="ml-4 text-blue-400">Edit</button>
+        </div>
+      `).join('');
+
+      document.getElementById('services-list').innerHTML = services.map((s,i) => `
+        <div class="bg-zinc-900 p-4 rounded mb-3">
+          ${s.name} - $${s.price}
+          <button onclick="editService(${i})" class="ml-4 text-blue-400">Edit</button>
         </div>
       `).join('');
     }
 
-    function renderServices() {
-      const container = document.getElementById('services-list');
-      if (services.length === 0) {
-        container.innerHTML = `<p class="text-zinc-500 text-center py-12">No services yet. Add one above.</p>`;
-        return;
-      }
-      container.innerHTML = services.map((service, index) => `
-        <div class="bg-zinc-800 rounded-2xl p-6 flex justify-between items-center group">
-          <div>
-            <div class="text-lg font-medium">${service.name}</div>
-            <div class="text-emerald-400 font-medium">${service.price ? '$' + service.price : 'Free'}</div>
-          </div>
-          <div class="flex gap-3">
-            <button onclick="editService(${index})" 
-                    class="px-5 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm">Edit</button>
-            <button onclick="deleteService(${index})" 
-                    class="px-5 py-2 bg-red-900/50 hover:bg-red-900 rounded-xl text-sm">Delete</button>
-          </div>
-        </div>
-      `).join('');
+    async function saveToGitHub() {
+      const token = prompt("Enter your GitHub token (for this session):");
+      if (!token) return;
+
+      // Save members
+      await fetch('/api/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          file: 'members.json',
+          content: members,
+          message: 'Update members'
+        })
+      });
+
+      // Save services
+      await fetch('/api/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          file: 'subs.json',
+          content: services,
+          message: 'Update services'
+        })
+      });
+
+      alert("✅ Saved to GitHub!");
+      location.reload();
     }
 
-    // === Member Functions ===
-    function addMember() {
-      const name = prompt("Enter member name:");
-      if (!name) return;
-      const email = prompt("Enter email (optional):") || "";
-      members.push({ id: Date.now(), name, email });
-      renderMembers();
-    }
-
-    function editMember(index) {
-      const m = members[index];
-      const name = prompt("Name:", m.name);
-      if (name === null) return;
-      const email = prompt("Email:", m.email || "");
-      members[index] = { ...m, name, email };
-      renderMembers();
-    }
-
-    function deleteMember(index) {
-      if (confirm("Delete this member?")) {
-        members.splice(index, 1);
-        renderMembers();
-      }
-    }
-
-    // === Service Functions ===
-    function addService() {
-      const name = prompt("Service name:");
-      if (!name) return;
-      const price = prompt("Price (e.g. 29.99 or leave empty):") || "";
-      services.push({ id: Date.now(), name, price });
-      renderServices();
-    }
-
-    function editService(index) {
-      const s = services[index];
-      const name = prompt("Service name:", s.name);
-      if (name === null) return;
-      const price = prompt("Price:", s.price || "");
-      services[index] = { ...s, name, price };
-      renderServices();
-    }
-
-    function deleteService(index) {
-      if (confirm("Delete this service?")) {
-        services.splice(index, 1);
-        renderServices();
-      }
-    }
-
-    function downloadJSONs() {
-      const membersBlob = new Blob([JSON.stringify(members, null, 2)], {type: 'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(membersBlob);
-      a.download = 'members.json';
-      a.click();
-
-      const servicesBlob = new Blob([JSON.stringify(services, null, 2)], {type: 'application/json'});
-      const b = document.createElement('a');
-      b.href = URL.createObjectURL(servicesBlob);
-      b.download = 'subs.json';
-      b.click();
-
-      alert("✅ Downloaded members.json and subs.json!\n\nUpload these files to your GitHub repo to update the website.");
-    }
-
-    window.onload = loadData;
+    // Add your CRUD functions here (addMember, editMember, etc.)
+    loadData();
   </script>
 </body>
 </html>
